@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>rub.nds.oidc</groupId>
+  <artifactId>OIDC_OP_WebApp</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>OIDC_OP_WebApp</name>
+    <modules>
+        <module>oauth-2.0-sdk-with-openid-connect-extensions</module>
+    <module>webapp</module>
+    <module>oidc_op</module>
+  </modules>
+</project>

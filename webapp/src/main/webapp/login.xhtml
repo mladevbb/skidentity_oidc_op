@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:h="http://java.sun.com/jsf/html"  
+      xmlns:f="http://java.sun.com/jsf/core"  
+      xmlns:p="http://primefaces.org/ui">
+    <head>
+        <title>SkIDentity OpenID Connect Provider</title>
+        <meta name="viewport" content="width=device-width"/>
+    </head>
+    <body>
+        <form method="POST" action="j_security_check">
+            <table border="0" cellspacing="5">
+                <tr>
+                    <th align="right">Username:</th>
+                    <td align="left"><input type="text" name="j_username" /></td>
+                </tr>
+                <tr>
+                    <th align="right">Password:</th>
+                    <td align="left"><input type="password" name="j_password" /></td>
+                </tr>
+                <tr>
+                    <td align="right"><input type="submit" value="Login" /></td>
+                </tr>
+            </table>
+        </form>
+    </body>
+</html>
