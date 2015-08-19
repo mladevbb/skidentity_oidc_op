@@ -2,17 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-    <artifactId>OIDC_OP_WebApp</artifactId>
-    <groupId>rub.nds.oidc</groupId>
-    <version>1.0-SNAPSHOT</version>
-  </parent>
+        <artifactId>OIDC_OP_WebApp</artifactId>
+        <groupId>rub.nds.oidc</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
     <groupId>rub.nds.oidc</groupId>
     <artifactId>webapp</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>webapp</name>
+    <name>SkIDentity OpenID Connect Identity Provider WEBApp</name>
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
@@ -20,6 +20,7 @@
     </properties>
 
     <dependencies>
+        
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.faces</artifactId>
@@ -42,9 +43,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>4.14.3-SNAPSHOT</version>
+            <groupId>rub.nds.oidc</groupId>
+            <artifactId>oidc_op</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
