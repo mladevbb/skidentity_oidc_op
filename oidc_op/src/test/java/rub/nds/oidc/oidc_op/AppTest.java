@@ -1,5 +1,8 @@
 package rub.nds.oidc.oidc_op;
 
+import com.nimbusds.oauth2.sdk.auth.Secret;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import java.security.SecureRandom;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,6 +36,9 @@ public class AppTest
      */
     public void testApp()
     {
-        assertTrue( true );
+        Secret clientSecret = new Secret();
+        ClientID clientID = new ClientID();
+        System.out.println(clientSecret.getValue());
+        System.out.println(clientID.getValue());
     }
 }

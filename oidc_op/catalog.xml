@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="file:/media/truecrypt2/Programming/Netbeans/Projects/Important/skidentity_oidc_op/oidc_op/../webapp/src/main/resources/configDatabase.xml" uri="src/main/resources/jaxb/ConfigDatabase/configDatabase.xml"/>
+    <system systemId="file:/media/truecrypt2/Programming/Netbeans/Projects/Important/skidentity_oidc_op/oidc_op/../webapp/src/main/resources/configDatabaseSchema.xsd" uri="src/main/resources/jaxb/ConfigDatabase/configDatabaseSchema.xsd"/>
+</catalog>

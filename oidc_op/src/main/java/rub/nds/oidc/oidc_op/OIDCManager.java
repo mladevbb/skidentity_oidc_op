@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minidev.json.JSONObject;
+import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
 
 /**
  *
@@ -40,7 +41,6 @@ import net.minidev.json.JSONObject;
 public class OIDCManager {
 
     public static HTTPResponse generateCode(HTTPRequest request) {
-        ConfigurationManager.init();
 
         try {
             Map<String, String> params = request.getQueryParameters();
@@ -63,7 +63,8 @@ public class OIDCManager {
         try {
             Map<String, String> params = request.getQueryParameters();
             String code = params.get("code");
-             String redirect_uri = params.get("redirect_uri");
+            String redirect_uri = params.get("redirect_uri");
+            String client_id = params.get("client_id");
 
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
             OIDCCache.getHandler().invalidate(code);
@@ -72,18 +73,14 @@ public class OIDCManager {
             // Create an HMAC-protected JWS object with some payload
             JWSObject jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.HS256), new Payload(tCollection.getIdToken().toJSONObject()));
 
-            // We need a 256-bit key for HS256 which must be pre-shared
-            byte[] sharedKey = new byte[32];
-            new SecureRandom().nextBytes(sharedKey);
-
             // Apply the HMAC to the JWS object
-            jwsObject.sign(new MACSigner(sharedKey));
+            jwsObject.sign(new MACSigner(OIDCCache.getCfgDB().getClientByID(client_id).getClient_secret().getBytes()));
 
             // Serialise to URL-safe format
             OIDCAccessTokenResponse response = new OIDCAccessTokenResponse(tCollection.getaToken(), tCollection.getrToken(), jwsObject.serialize());
             return response.toHTTPResponse();
 
-        } catch (JOSEException | ExecutionException | SerializeException ex) {
+        } catch (JOSEException | ExecutionException | SerializeException | OIDCClientNotFoundException ex) {
             Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         } 

@@ -41,6 +41,16 @@ public class OIDCCache {
     private static LoadingCache<String, TokenCollection> cachedIDs;
     private static int cacheDuration = 30;
     private static Logger _log = LoggerFactory.getLogger(OIDCCache.class);
+    private static ConfigDatabase cfgDB;
+
+    public static void setCfgDB(ConfigDatabase cfgDB) {
+        OIDCCache.cfgDB = cfgDB;
+    }
+
+    public static ConfigDatabase getCfgDB() {
+        return cfgDB;
+    }
+    
 
     private OIDCCache() {
     }

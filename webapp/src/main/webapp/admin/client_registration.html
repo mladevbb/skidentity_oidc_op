@@ -1,10 +1,16 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width">
+        <meta charset="utf-8" />
+        <title></title>
     </head>
     <body>
-        
+        Client registration:
+        <form action="/admin/client_registration" method="post" enctype="text/plain">
+            <label>Client Name</label><input type="text" name="clientName" />
+            <label>Client ID</label><input type="text" name="clientID" />
+            <label>Client Secret</label><input type="text" name="clientSecret" />
+            <label>Redirect URI</label><input type="text" name="redirectURI" />
+        </form>
     </body>
 </html>

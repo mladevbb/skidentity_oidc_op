@@ -10,7 +10,7 @@
     <groupId>rub.nds.oidc</groupId>
     <artifactId>oidc_op</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>SkIDentity OpenID Connect Identitz Provider Lib</name>
+    <name>SkIDentity OpenID Connect Identity Provider Lib</name>
     <url>http://maven.apache.org</url>
     <build>
         <plugins>
@@ -21,6 +21,69 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaIncludes>
+                                <include>jaxb/ConfigDatabase/*.xsd</include>
+                            </schemaIncludes>
+                            <episodeFile>${project.build.directory}/generated-sources/xjc/META-INF/jaxb-ConfigDatabase.episode</episodeFile>
+                        </configuration>
+                        <id>jaxb-generate-ConfigDatabase</id>
+                    </execution>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaIncludes>
+                                <include>jaxb/ConfigDatabase/*.xsd</include>
+                            </schemaIncludes>
+                            <episodeFile>${project.build.directory}/generated-sources/xjc/META-INF/jaxb-ConfigDatabase.episode</episodeFile>
+                        </configuration>
+                        <id>jaxb-generate-ConfigDatabase_1</id>
+                    </execution>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaIncludes>
+                                <include>jaxb/Configdatabase/*.xsd</include>
+                            </schemaIncludes>
+                            <episodeFile>${project.build.directory}/generated-sources/xjc/META-INF/jaxb-Configdatabase.episode</episodeFile>
+                            <generatePackage>rub.nds.oidc.oidc_op</generatePackage>
+                        </configuration>
+                        <id>jaxb-generate-Configdatabase</id>
+                    </execution>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaIncludes>
+                                <include>jaxb/ConfigDatabase/*.xsd</include>
+                            </schemaIncludes>
+                            <episodeFile>${project.build.directory}/generated-sources/xjc/META-INF/jaxb-ConfigDatabase.episode</episodeFile>
+                            <generatePackage>rub.nds.oidc.oidc_op</generatePackage>
+                        </configuration>
+                        <id>jaxb-generate-ConfigDatabase_2</id>
+                    </execution>
+                </executions>
+                <configuration>
+                    <catalog>src/main/resources/jaxb/catalog.xml</catalog>
+                    <catalogResolver>org.jvnet.jaxb2.maven2.resolver.tools.ClasspathCatalogResolver</catalogResolver>
+                    <forceRegenerate>true</forceRegenerate>
+                    <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory>
+                    <verbose>true</verbose>
                 </configuration>
             </plugin>
         </plugins>
@@ -50,6 +113,18 @@
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk-nds</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.3</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>

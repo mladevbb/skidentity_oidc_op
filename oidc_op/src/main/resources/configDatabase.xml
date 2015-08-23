@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rub.nds.oidc.oidc_op.DatabaseStorage>
+    <clientDatabase>
+        <name></name>
+        <redirect_uris>
+            <redirect_uri></redirect_uri>
+        </redirect_uris>
+        <client_id></client_id>
+        <client_secret></client_secret>
+    </clientDatabase>
+</rub.nds.oidc.oidc_op.DatabaseStorage>
