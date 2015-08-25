@@ -9,7 +9,7 @@
     <name>SkIDentity OpenID Connect Identity Provider</name>
   
     <modules>
-        <module>oauth-2.0-sdk-with-openid-connect-extensions</module>
+
         <module>webapp</module>
         <module>oidc_op</module>
     </modules>
