@@ -4,6 +4,11 @@
         <param-name>javax.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
     </context-param>
+   <listener>
+	<listener-class>
+             rub.nds.oidc.oidc_op.ConfigurationManager
+        </listener-class>    
+   </listener>          
     <servlet>
         <servlet-name>AuthenticationSerlvet</servlet-name>
         <servlet-class>rub.nds.oidc.webapp.AuthenticationSerlvet</servlet-class>

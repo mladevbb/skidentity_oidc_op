@@ -32,7 +32,7 @@ public class ConfigurationManagerTest extends TestCase {
         List<Client> clientDB = OIDCCache.getCfgDB().getClientDatabase();
 
         for (Client c : clientDB) {
-            System.out.println(c.getName());
+            System.out.println("Client: " + c.getName());
         }
     }
 
