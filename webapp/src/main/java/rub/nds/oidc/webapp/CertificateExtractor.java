@@ -11,7 +11,7 @@ import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
  */
 public class CertificateExtractor {
 
-    private CertificateExtractor() {
+    protected CertificateExtractor() {
     }
 
     /**

@@ -24,6 +24,7 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -40,7 +41,7 @@ import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
  */
 public class OIDCManager {
 
-    public static HTTPResponse generateCode(HTTPRequest request) {
+    public static HTTPResponse generateCode(HTTPRequest request, X509Certificate userCertificate) {
 
         try {
             Map<String, String> params = request.getQueryParameters();
@@ -48,7 +49,7 @@ public class OIDCManager {
             State state = new State(params.get("state"));
 
             AuthorizationCode code = new AuthorizationCode();
-            TokenCollection collection = generateTokenCollection();
+            TokenCollection collection = generateTokenCollection(userCertificate);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
             AuthenticationSuccessResponse response = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, state, state, ResponseMode.QUERY);
@@ -86,20 +87,21 @@ public class OIDCManager {
         } 
     }
 
-    private static IDTokenClaimsSet generateIDToken() {
-        JSONObject jToken = new JSONObject();
+    private static IDTokenClaimsSet generateIDToken(X509Certificate userCertificate) {
         Issuer iss = new Issuer("skidentity.com");
         Subject sub = new Subject("vladislav.mladenov@skidentity.com");
         List<Audience> audience = new ArrayList();
         audience.add(new Audience("http://sp1.com"));
-        return new IDTokenClaimsSet(iss, sub, audience, new Date(), new Date());
+        IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, new Date(), new Date());
+        //claimSet.setClaim("user_cert", userCertificate);
+        return claimSet;
     }
 
-    private static TokenCollection generateTokenCollection() {
+    private static TokenCollection generateTokenCollection(X509Certificate userCertificate) {
 
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
-        IDTokenClaimsSet claimSet = generateIDToken();
+        IDTokenClaimsSet claimSet = generateIDToken(userCertificate);
 
         return new TokenCollection(token, rToken, claimSet);
     }
