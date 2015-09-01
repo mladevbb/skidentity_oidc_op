@@ -23,7 +23,7 @@ public class CertificateExtractor {
      * 
      * @throws OIDCUserCertificateNotFoundException If no X.509 certificat can be found in the request
      */
-    protected static X509Certificate extractCertificate(HttpServletRequest request) 
+    protected X509Certificate extractCertificate(HttpServletRequest request) 
             throws OIDCUserCertificateNotFoundException {
         X509Certificate[] certificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
         if (null != certificateChain && certificateChain.length > 0) {
