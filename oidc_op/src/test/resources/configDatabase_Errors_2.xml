@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rub.nds.oidc.oidc_op.ConfigDatabase>
+    <clientDatabase>
+        <client>
+            <name>Cloud NDS OIDC Demo App</name>
+            <name>Cloud NDS OIDC Demo App2</name>
+            <redirect_uris>
+                <redirect_uri>http://cloud.nds.rub.de:8067/</redirect_uri>
+            </redirect_uris>
+            <client_id>Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU</client_id>
+            <client_secret>P1vhVxcD2BNY0kPzyrQAOcnLkrOH8A0wkRysGocU0U8</client_secret>
+        </client>
+        <client>
+            <name>Cloud NDS Test App 2</name>
+            <redirect_uris>
+                <redirect_uri>http://cloud.nds.rub.de:8068/</redirect_uri>
+            </redirect_uris>
+            <client_id>XKzid9EjileQF9AmyKFk7bXuccN_B6RmRJLqMVH9txI</client_id>
+            <client_secret>2C4PKtTYxQiApWBBTHuLbdXQ_ZYsIIF8GvesvOB65ic</client_secret>
+        </client>
+    </clientDatabase>
+</rub.nds.oidc.oidc_op.ConfigDatabase>

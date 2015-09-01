@@ -1,7 +1,5 @@
 package rub.nds.oidc.oidc_op;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.List;
@@ -16,8 +14,7 @@ import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
 public class ConfigDatabase {
     private static final Logger _log = LoggerFactory.getLogger(ConfigDatabase.class);
     private PropertyChangeSupport propertySupport = new PropertyChangeSupport(this);
-    
-    @XStreamAlias("configDatabase")
+
     private List<Client> clientDatabase;
 
     public List<Client> getClientDatabase() {
