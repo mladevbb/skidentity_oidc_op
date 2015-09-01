@@ -11,8 +11,6 @@ import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
  */
 public class CertificateExtractor {
 
-    static X509Certificate[] certificateChain;
-
     protected CertificateExtractor() {
     }
 
@@ -27,7 +25,7 @@ public class CertificateExtractor {
      */
     protected static X509Certificate extractCertificate(HttpServletRequest request) 
             throws OIDCUserCertificateNotFoundException {
-        certificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+        X509Certificate[] certificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
         if (null != certificateChain && certificateChain.length > 0) {
             return certificateChain[0];
         }

@@ -3,15 +3,11 @@ package rub.nds.oidc.webapp;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
-import java.security.cert.X509Certificate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
 import rub.nds.oidc.oidc_op.OIDCManager;
 
 /**
@@ -32,12 +28,6 @@ public class TokenServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            X509Certificate userCertificate = CertificateExtractor.extractCertificate(request);
-        } catch (OIDCUserCertificateNotFoundException exception) {
-            Logger.getLogger(TokenServlet.class.getName()).log(Level.SEVERE, null, exception);
-            // To Do: Implement 'Client certificate not found' response
-        }
         HTTPResponse oidc_response = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(request));
         ServletUtils.applyHTTPResponse(oidc_response, response);
     }

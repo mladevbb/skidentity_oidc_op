@@ -38,12 +38,12 @@ public class AuthenticationSerlvet extends HttpServlet {
             throws ServletException, IOException {
         try {
             X509Certificate userCertificate = CertificateExtractor.extractCertificate(request);
+            HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request));
+            ServletUtils.applyHTTPResponse(oidc_response, response);
         } catch (OIDCUserCertificateNotFoundException exception) {
             Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
             // To Do: Implement 'Client certificate not found' response
         }
-        HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request));
-        ServletUtils.applyHTTPResponse(oidc_response, response);
         //
     }
     
