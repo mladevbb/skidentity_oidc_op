@@ -2,19 +2,19 @@
   <xs:element name="configDatabase">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="clientDatabase">
+        <xs:element name="clientDatabase"  maxOccurs="1" minOccurs="1">
           <xs:complexType>
             <xs:sequence>
-              <xs:element type="xs:string" name="name"/>
-              <xs:element name="redirect_uris">
+              <xs:element type="xs:id" name="name" maxOccurs="1" minOccurs="1"/>
+              <xs:element name="redirect_uris"  maxOccurs="1" minOccurs="1">
                 <xs:complexType>
                   <xs:sequence>
-                    <xs:element type="xs:string" name="redirect_uri"/>
+                    <xs:element type="xs:string" name="redirect_uri"  maxOccurs="10" minOccurs="1"/>
                   </xs:sequence>
                 </xs:complexType>
               </xs:element>
-              <xs:element type="xs:string" name="client_id"/>
-              <xs:element type="xs:string" name="client_secret"/>
+              <xs:element type="xs:id" name="client_id"  maxOccurs="1" minOccurs="1"/>
+              <xs:element type="xs:string" name="client_secret"  maxOccurs="1" minOccurs="1"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
