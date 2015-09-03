@@ -1,4 +1,4 @@
-package rub.nds.oidc.webapp;
+package rub.nds.oidc.oidc_op;
 
 import java.security.cert.X509Certificate;
 import javax.servlet.http.HttpServletRequest;

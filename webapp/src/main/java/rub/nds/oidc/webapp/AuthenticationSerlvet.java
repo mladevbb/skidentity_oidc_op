@@ -6,10 +6,10 @@
 
 package rub.nds.oidc.webapp;
 
+import rub.nds.oidc.oidc_op.CertificateExtractor;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
-import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -24,7 +24,6 @@ import rub.nds.oidc.oidc_op.OIDCManager;
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
  */
 public class AuthenticationSerlvet extends HttpServlet {
-    private CertificateExtractor certificateExtractor;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -38,10 +37,8 @@ public class AuthenticationSerlvet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            certificateExtractor = new CertificateExtractor();
-            X509Certificate userCertificate = certificateExtractor.extractCertificate(request);
-            HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), userCertificate);
-            ServletUtils.applyHTTPResponse(oidc_response, response);
+           HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
+           ServletUtils.applyHTTPResponse(oidc_response, response);
         } catch (OIDCUserCertificateNotFoundException exception) {
             Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
             // To Do: Implement 'Client certificate not found' response

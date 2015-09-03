@@ -32,16 +32,19 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import net.minidev.json.JSONObject;
 import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
+import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
 
 /**
  *
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
  */
 public class OIDCManager {
+    private static CertificateExtractor certificateExtractor;
 
-    public static HTTPResponse generateCode(HTTPRequest request, X509Certificate userCertificate) {
+    public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
 
         try {
             Map<String, String> params = request.getQueryParameters();
@@ -49,7 +52,7 @@ public class OIDCManager {
             State state = new State(params.get("state"));
 
             AuthorizationCode code = new AuthorizationCode();
-            TokenCollection collection = generateTokenCollection(userCertificate);
+            TokenCollection collection = generateTokenCollection(servletRequest);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
             AuthenticationSuccessResponse response = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, state, state, ResponseMode.QUERY);
@@ -87,9 +90,12 @@ public class OIDCManager {
         } 
     }
 
-    private static IDTokenClaimsSet generateIDToken(X509Certificate userCertificate) {
+    private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
+        certificateExtractor = new CertificateExtractor();
+        X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
+        
         Issuer iss = new Issuer("skidentity.com");
-        Subject sub = new Subject("vladislav.mladenov@skidentity.com");
+        Subject sub = new Subject(servletRequest.getUserPrincipal().getName());
         List<Audience> audience = new ArrayList();
         audience.add(new Audience("http://sp1.com"));
         IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, new Date(), new Date());
@@ -97,11 +103,11 @@ public class OIDCManager {
         return claimSet;
     }
 
-    private static TokenCollection generateTokenCollection(X509Certificate userCertificate) {
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
 
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
-        IDTokenClaimsSet claimSet = generateIDToken(userCertificate);
+        IDTokenClaimsSet claimSet = generateIDToken(servletRequest);
 
         return new TokenCollection(token, rToken, claimSet);
     }
