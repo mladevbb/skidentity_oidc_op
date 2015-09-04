@@ -83,20 +83,10 @@
            scheme="https" secure="true" SSLEnabled="true"
            keystoreFile="/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/idp/idp.jks"
            keystorePass="changeit"
-           clientAuth="true" sslProtocol="TLS"
+           clientAuth="want" sslProtocol="TLS"
            sslEnabledProtocols="TLSv1.2,TLSv1.1,TLSv1"
            truststoreFile="/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/root/root.jks"
            truststorePass="changeit" />
-    <!-- Define a SSL Coyote HTTP/1.1 Connector without client authentication on port 8444
-         Insert your paths for idp.jks and root.jks -->
-    <Connector
-           protocol="org.apache.coyote.http11.Http11NioProtocol"
-           port="8444" maxThreads="200"
-           scheme="https" secure="true" SSLEnabled="true"
-           keystoreFile="/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/idp/idp.jks"
-           keystorePass="changeit"
-           sslProtocol="TLS"
-           sslEnabledProtocols="TLSv1.2,TLSv1.1,TLSv1" />
     <!-- Define an AJP 1.3 Connector on port 8009 -->
     <Connector port="8009" protocol="AJP/1.3" redirectPort="8443"/>
     <!-- An Engine represents the entry point (within Catalina) that processes
