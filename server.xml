@@ -75,7 +75,7 @@
                maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
                clientAuth="false" sslProtocol="TLS" />
     -->
-    <!-- Define a SSL Coyote HTTP/1.1 Connector on port 8443 
+    <!-- Define a SSL Coyote HTTP/1.1 Connector with required client authentication on port 8443 
          Insert your paths for idp.jks and root.jks -->
     <Connector
            protocol="org.apache.coyote.http11.Http11NioProtocol"
@@ -83,7 +83,7 @@
            scheme="https" secure="true" SSLEnabled="true"
            keystoreFile="/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/idp/idp.jks"
            keystorePass="changeit"
-           clientAuth="true" sslProtocol="TLS"
+           clientAuth="want" sslProtocol="TLS"
            sslEnabledProtocols="TLSv1.2,TLSv1.1,TLSv1"
            truststoreFile="/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/root/root.jks"
            truststorePass="changeit" />
@@ -127,4 +127,3 @@
     </Engine>
   </Service>
 </Server>
-
