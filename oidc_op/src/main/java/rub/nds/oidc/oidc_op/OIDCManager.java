@@ -48,6 +48,7 @@ public class OIDCManager {
 
         try {
             Map<String, String> params = request.getQueryParameters();
+            Client client = OIDCCache.getCfgDB().getClientByID(params.get("client_id"));
             String redirect_uri = params.get("redirect_uri");
             State state = new State(params.get("state"));
 
@@ -57,7 +58,7 @@ public class OIDCManager {
 
             AuthenticationSuccessResponse response = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, state, state, ResponseMode.QUERY);
             return response.toHTTPResponse();
-        } catch (URISyntaxException | SerializeException ex) {
+        } catch (URISyntaxException | SerializeException | OIDCClientNotFoundException ex) {
             Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
