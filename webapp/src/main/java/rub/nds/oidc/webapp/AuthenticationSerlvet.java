@@ -6,7 +6,6 @@
 
 package rub.nds.oidc.webapp;
 
-import rub.nds.oidc.oidc_op.CertificateExtractor;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
