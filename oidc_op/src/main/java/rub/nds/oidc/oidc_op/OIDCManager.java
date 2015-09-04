@@ -11,7 +11,6 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.Audience;
@@ -26,7 +25,6 @@ import com.nimbusds.openid.connect.sdk.OIDCAccessTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,7 +34,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
-import net.minidev.json.JSONObject;
 import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
 import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
 
@@ -72,13 +69,7 @@ public class OIDCManager {
             Map<String, String> params = request.getQueryParameters();
             String code = params.get("code");
             String redirect_uri = params.get("redirect_uri");
-            String client_id;
-            if (request.getMethod() == HTTPRequest.Method.POST  || request.getMethod() == HTTPRequest.Method.PUT) {
-                // parse() requires HTTP-Header Content-Type -> set only for POST/PUT Messages
-                client_id = ClientAuthentication.parse(request).getClientID().toString();
-            } else {
-                client_id = params.get("client_id");
-            }
+            String  client_id = ClientAuthentication.parse(request).getClientID().toString();
 
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
             OIDCCache.getHandler().invalidate(code);
@@ -97,7 +88,7 @@ public class OIDCManager {
         } catch (JOSEException | ExecutionException | SerializeException | OIDCClientNotFoundException | ParseException ex) {
             Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
             return null;
-        } 
+        }
     }
 
     private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {

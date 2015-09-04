@@ -4,11 +4,11 @@
         <param-name>javax.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
     </context-param>
-   <listener>
-	<listener-class>
+    <listener>
+        <listener-class>
              rub.nds.oidc.oidc_op.ConfigurationManager
-        </listener-class>    
-   </listener>          
+        </listener-class>
+    </listener>
     <servlet>
         <servlet-name>AuthenticationSerlvet</servlet-name>
         <servlet-class>rub.nds.oidc.webapp.AuthenticationSerlvet</servlet-class>
@@ -43,20 +43,23 @@
         <welcome-file>faces/index.xhtml</welcome-file>
     </welcome-file-list>
     <security-constraint>
-        <display-name>User Authentication</display-name>
         <web-resource-collection>
-            <web-resource-name>Authentication Servlet</web-resource-name>
+            <web-resource-name>All Servlets</web-resource-name>
             <description/>
-            <url-pattern>/auth/*</url-pattern>
+            <url-pattern>/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <description/>
             <role-name>projectWorker</role-name>
         </auth-constraint>
+        <user-data-constraint>
+            <!-- transport-guarantee can be CONFIDENTIAL, INTEGRAL, or NONE -->
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
     </security-constraint>
     <login-config>
         <auth-method>FORM</auth-method>
-        <realm-name>projectWorker</realm-name>
+        <realm-name>SkIDentity</realm-name>
         <form-login-config>
             <form-login-page>/login.xhtml</form-login-page>
             <form-error-page>/login.xhtml</form-error-page>
