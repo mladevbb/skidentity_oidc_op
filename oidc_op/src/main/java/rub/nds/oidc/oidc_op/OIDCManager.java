@@ -42,9 +42,10 @@ import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
  */
 public class OIDCManager {
+
     private static CertificateExtractor certificateExtractor;
 
-    public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
+    public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException, OIDCClientNotFoundException {
 
         try {
             Map<String, String> params = request.getQueryParameters();
@@ -58,7 +59,7 @@ public class OIDCManager {
 
             AuthenticationSuccessResponse response = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, state, state, ResponseMode.QUERY);
             return response.toHTTPResponse();
-        } catch (URISyntaxException | SerializeException | OIDCClientNotFoundException ex) {
+        } catch (URISyntaxException | SerializeException ex) {
             Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
@@ -69,7 +70,7 @@ public class OIDCManager {
             Map<String, String> params = request.getQueryParameters();
             String code = params.get("code");
             String redirect_uri = params.get("redirect_uri");
-            String  client_id = ClientAuthentication.parse(request).getClientID().toString();
+            String client_id = ClientAuthentication.parse(request).getClientID().toString();
 
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
             OIDCCache.getHandler().invalidate(code);
@@ -94,13 +95,13 @@ public class OIDCManager {
     private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
         certificateExtractor = new CertificateExtractor();
         X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
-        
+
         Issuer iss = new Issuer("skidentity.com");
         Subject sub = new Subject(servletRequest.getUserPrincipal().getName());
         List<Audience> audience = new ArrayList();
         audience.add(new Audience("http://sp1.com"));
         IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, new Date(), new Date());
-        //claimSet.setClaim("user_cert", userCertificate);
+        claimSet.setClaim("user_cert", userCertificate);
         return claimSet;
     }
 

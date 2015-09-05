@@ -15,6 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
 import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
 import rub.nds.oidc.oidc_op.OIDCManager;
 
@@ -38,7 +39,7 @@ public class AuthenticationSerlvet extends HttpServlet {
         try {
            HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
            ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (OIDCUserCertificateNotFoundException exception) {
+        } catch (OIDCUserCertificateNotFoundException | OIDCClientNotFoundException exception) {
             Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
             // To Do: Implement 'Client certificate not found' response
         }
