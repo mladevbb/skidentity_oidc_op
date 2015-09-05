@@ -41,7 +41,7 @@ public class AuthenticationSerlvet extends HttpServlet {
            ServletUtils.applyHTTPResponse(oidc_response, response);
         } catch (OIDCUserCertificateNotFoundException | OIDCClientNotFoundException exception) {
             Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
-            // To Do: Implement 'Client certificate not found' response
+            // To Do: Implement 'Client certificate not found' and 'OIDCClientNotFound' response
         }
         //
     }

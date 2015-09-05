@@ -70,7 +70,13 @@ public class OIDCManager {
             Map<String, String> params = request.getQueryParameters();
             String code = params.get("code");
             String redirect_uri = params.get("redirect_uri");
-            String client_id = ClientAuthentication.parse(request).getClientID().toString();
+            String client_id;
+            if (request.getMethod() == HTTPRequest.Method.POST  || request.getMethod() == HTTPRequest.Method.PUT) {
+                // parse() returns null for HTTP GET method
+                client_id = ClientAuthentication.parse(request).getClientID().toString();
+            } else {
+                client_id = params.get("client_id");
+            }
 
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
             OIDCCache.getHandler().invalidate(code);
