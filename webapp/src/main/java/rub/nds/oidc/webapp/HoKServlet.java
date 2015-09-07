@@ -3,27 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package rub.nds.oidc.webapp;
 
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.PrintWriter;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.annotation.WebInitParam;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
-import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
-import rub.nds.oidc.oidc_op.OIDCManager;
+import javax.servlet.http.HttpSession;
 
 /**
  *
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
  */
-public class AuthenticationSerlvet extends HttpServlet {
+@WebServlet(name = "HoKServlet")
+public class HoKServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -36,16 +33,11 @@ public class AuthenticationSerlvet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-           HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
-           ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (OIDCUserCertificateNotFoundException | OIDCClientNotFoundException exception) {
-            Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
-            // TODO: Implement 'Client certificate not found' and 'OIDCClientNotFound' response
-        }
-        //
+        HttpSession session = request.getSession();
+        session.setAttribute("hok", true);
+
     }
-    
+
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.

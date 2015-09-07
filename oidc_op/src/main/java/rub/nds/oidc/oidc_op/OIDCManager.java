@@ -34,23 +34,40 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
+import org.slf4j.LoggerFactory;
 import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
 import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
 
 /**
  *
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
+ * TODO[PM]: Name hinzu
  */
+
+//TODO[PM] : Kommentare, JUnit Tests
 public class OIDCManager {
+    private static final org.slf4j.Logger _log = LoggerFactory.getLogger(OIDCManager.class);
+    private static String client_id;
+    private static String redirect_uri;
 
-    private static CertificateExtractor certificateExtractor;
-
+    /**
+     *
+     * @param request
+     * @param servletRequest
+     * @return
+     * @throws OIDCUserCertificateNotFoundException
+     * @throws OIDCClientNotFoundException
+     */
     public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException, OIDCClientNotFoundException {
 
+        //TODO[PM]: Empty OAuth/OIDC parameters
         try {
             Map<String, String> params = request.getQueryParameters();
             Client client = OIDCCache.getCfgDB().getClientByID(params.get("client_id"));
             String redirect_uri = params.get("redirect_uri");
+            //TODO[PM]: Verify client_id -> redirect_uri(s)
+            //TODO[PM]: Exc eption handling (empty redirect_uri, false redirect_uri, ... )
+
             State state = new State(params.get("state"));
 
             AuthorizationCode code = new AuthorizationCode();
@@ -65,13 +82,19 @@ public class OIDCManager {
         }
     }
 
+    /**
+     *
+     * @param request
+     * @return
+     * TODO [PM]: Check Signature creation and verification
+     */
     public static HTTPResponse generateAuthenticationResponse(HTTPRequest request) {
         try {
             Map<String, String> params = request.getQueryParameters();
             String code = params.get("code");
-            String redirect_uri = params.get("redirect_uri");
-            String client_id;
-            if (request.getMethod() == HTTPRequest.Method.POST  || request.getMethod() == HTTPRequest.Method.PUT) {
+            redirect_uri = params.get("redirect_uri");
+
+            if (request.getMethod() == HTTPRequest.Method.POST || request.getMethod() == HTTPRequest.Method.PUT) {
                 // parse() returns null for HTTP GET method
                 client_id = ClientAuthentication.parse(request).getClientID().toString();
             } else {
@@ -99,20 +122,34 @@ public class OIDCManager {
     }
 
     private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
-        certificateExtractor = new CertificateExtractor();
-        X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
 
+        //TODO[PM&VM]: Issuer???
         Issuer iss = new Issuer("skidentity.com");
+
+        //TODO[PM]: Exception Handling
         Subject sub = new Subject(servletRequest.getUserPrincipal().getName());
+
         List<Audience> audience = new ArrayList();
-        audience.add(new Audience("http://sp1.com"));
+        audience.add(new Audience(client_id));
         IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, new Date(), new Date());
-        claimSet.setClaim("user_cert", userCertificate);
+
+        checkHokAuth(servletRequest, claimSet);
+
         return claimSet;
     }
 
-    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
+    private static void checkHokAuth(HttpServletRequest servletRequest, IDTokenClaimsSet claimSet) throws OIDCUserCertificateNotFoundException {
+        //TODO [PM]: Exception Handling: Variable Type
+        if ((boolean)servletRequest.getSession().getAttribute("hok")) {
+            CertificateExtractor certificateExtractor;
 
+            certificateExtractor = new CertificateExtractor();
+            X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
+            claimSet.setClaim("user_cert", userCertificate);
+        }
+    }
+
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
         IDTokenClaimsSet claimSet = generateIDToken(servletRequest);
