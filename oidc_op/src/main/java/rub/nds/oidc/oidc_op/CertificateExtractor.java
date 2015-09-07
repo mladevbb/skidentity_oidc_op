@@ -2,7 +2,7 @@ package rub.nds.oidc.oidc_op;
 
 import java.security.cert.X509Certificate;
 import javax.servlet.http.HttpServletRequest;
-import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
+import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
 
 /**
  * Certificate extractor.
@@ -21,14 +21,14 @@ public class CertificateExtractor {
      * 
      * @return The X.509 certificate which is used in the request
      * 
-     * @throws OIDCUserCertificateNotFoundException If no X.509 certificat can be found in the request
+     * @throws OIDCMissingArgumentException If no X.509 certificat can be found in the request
      */
     protected X509Certificate extractCertificate(HttpServletRequest request) 
-            throws OIDCUserCertificateNotFoundException {
+            throws OIDCMissingArgumentException {
         X509Certificate[] certificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
         if (null != certificateChain && certificateChain.length > 0) {
             return certificateChain[0];
         }
-        throw new OIDCUserCertificateNotFoundException("No X.509 client certificate found in request");
+        throw new OIDCMissingArgumentException("No X.509 client certificate found in request");
     }
 }

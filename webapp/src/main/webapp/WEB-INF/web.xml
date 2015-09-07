@@ -22,6 +22,10 @@
         <servlet-name>ClientRegistration</servlet-name>
         <servlet-class>rub.nds.oidc.webapp.ClientRegistration</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>HoKServlet</servlet-name>
+        <servlet-class>rub.nds.oidc.webapp.HoKServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>AuthenticationSerlvet</servlet-name>
         <url-pattern>/auth</url-pattern>
@@ -33,6 +37,10 @@
     <servlet-mapping>
         <servlet-name>ClientRegistration</servlet-name>
         <url-pattern>/ClientRegistration</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>HoKServlet</servlet-name>
+        <url-pattern>/auth/hok</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
@@ -46,7 +54,7 @@
         <web-resource-collection>
             <web-resource-name>All Servlets</web-resource-name>
             <description/>
-            <url-pattern>/*</url-pattern>
+            <url-pattern>/auth/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <description/>

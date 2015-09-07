@@ -25,9 +25,9 @@ public class ConfigurationManager implements ServletContextListener {
 
     private static final Logger _log = LoggerFactory.getLogger(ConfigurationManager.class);
     private static ConfigurationManager cfgManager;
-    private static String configFile = "configDatabase.xml";
-    private static String schemaFile = "configDatabaseSchema.xsd";
-    
+    private static final String configFile = "configDatabase.xml";
+    private static final String schemaFile = "configDatabaseSchema.xsd";
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         _log.info("Initialize the ConfigurationManager (all manager)");
@@ -49,13 +49,14 @@ public class ConfigurationManager implements ServletContextListener {
             OIDCCache.initialize();
             File xmlFile = new File(ConfigurationManager.class.getClassLoader().getResource(configFile).getFile());
             File xsdFile = new File(ConfigurationManager.class.getClassLoader().getResource(schemaFile).getFile());
-            
+
             validateXMLSchema(xsdFile, xmlFile);
-            
+
             XStream xstream = new XStream();
             xstream.setClassLoader(ConfigDatabase.class.getClassLoader());
             xstream.processAnnotations(ConfigDatabase.class);
-            
+
+            //TODO: Fix configuration-setup so redirect_uris are added
             OIDCCache.setCfgDB((ConfigDatabase) xstream.fromXML(xmlFile));
         } catch (NullPointerException | OIDCConfigValidationException ex) {
             _log.error("Cannot initialize configurationManager!", ex);
@@ -63,8 +64,8 @@ public class ConfigurationManager implements ServletContextListener {
         }
     }
 
-    public static void validateXMLSchema(File xsdPath, File xmlPath) throws OIDCConfigValidationException{
-         
+    public static void validateXMLSchema(File xsdPath, File xmlPath) throws OIDCConfigValidationException {
+
         try {
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = factory.newSchema(xsdPath);
@@ -75,7 +76,7 @@ public class ConfigurationManager implements ServletContextListener {
             throw new OIDCConfigValidationException("Schema validation of config file not successful!");
         }
     }
-    
+
     public static void addClient(String name, String client_id, String client_secret, String redirect_uri) {
         Client client = new Client();
         client.setName(name);

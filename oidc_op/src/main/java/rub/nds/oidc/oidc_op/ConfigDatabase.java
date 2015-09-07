@@ -5,7 +5,7 @@ import java.beans.PropertyChangeSupport;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
+import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
 
 /**
  *
@@ -25,14 +25,14 @@ public class ConfigDatabase {
         this.clientDatabase = clientDatabase;
     }
     
-    public Client getClientByID(String client_id) throws OIDCClientNotFoundException{
+    public Client getClientByID(String client_id) throws OIDCNotFoundInDatabaseException{
         for (Client c : clientDatabase){
             if (c.getClient_id().equals(client_id)){
                 return c;
             }
         }
         _log.warn("Client with ID: " + client_id + "was not found in the Database");
-        throw new OIDCClientNotFoundException("Client with ID: " + client_id + "was not found in the Database");
+        throw new OIDCNotFoundInDatabaseException("Client with ID: " + client_id + " was not found in the Database");
     }
     
     public void addPropertyChangeListener(PropertyChangeListener listener) {

@@ -1,6 +1,5 @@
 package rub.nds.oidc.oidc_op;
 
-import com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.UnknownFieldException;
 import java.util.List;
 import static junit.framework.TestCase.assertTrue;
 import org.junit.After;
@@ -45,6 +44,7 @@ public class ConfigurationManagerTest {
         ConfigurationManager.initialize();
 
         List<Client> clientDB = OIDCCache.getCfgDB().getClientDatabase();
+        //assertTrue(clientDB.get(1).getRedirect_uris().get(0).equalsIgnoreCase("http://cloud.nds.rub.de:8068/"));
         assertTrue(clientDB.get(0).getClient_id().equalsIgnoreCase("Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU"));
         assertTrue(clientDB.get(0).getClient_secret().equalsIgnoreCase("P1vhVxcD2BNY0kPzyrQAOcnLkrOH8A0wkRysGocU0U8"));
         assertTrue(clientDB.get(1).getName().equalsIgnoreCase("Cloud NDS Test App 2"));

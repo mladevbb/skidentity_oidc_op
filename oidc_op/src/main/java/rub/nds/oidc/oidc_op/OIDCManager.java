@@ -35,58 +35,78 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.LoggerFactory;
-import rub.nds.oidc.exceptions.OIDCClientNotFoundException;
-import rub.nds.oidc.exceptions.OIDCUserCertificateNotFoundException;
+import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
+import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
 
 /**
  *
- * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
- * TODO[PM]: Name hinzu
+ * @author Vladislav Mladenov <vladislav.mladenov@rub.de>
+ * @author Philipp Markert <philipp.markert@rub.de>
+ *
+ * TODO[PM] : Kommentare, JUnit Tests
+ *
  */
-
-//TODO[PM] : Kommentare, JUnit Tests
 public class OIDCManager {
+
     private static final org.slf4j.Logger _log = LoggerFactory.getLogger(OIDCManager.class);
     private static String client_id;
     private static String redirect_uri;
+    private static String state;
 
     /**
      *
      * @param request
      * @param servletRequest
      * @return
-     * @throws OIDCUserCertificateNotFoundException
-     * @throws OIDCClientNotFoundException
+     * @throws rub.nds.oidc.exceptions.OIDCMissingArgumentException
+     * @throws rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException
      */
-    public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException, OIDCClientNotFoundException {
+    public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest)
+            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalArgumentException {
 
         //TODO[PM]: Empty OAuth/OIDC parameters
         try {
             Map<String, String> params = request.getQueryParameters();
-            Client client = OIDCCache.getCfgDB().getClientByID(params.get("client_id"));
-            String redirect_uri = params.get("redirect_uri");
-            //TODO[PM]: Verify client_id -> redirect_uri(s)
-            //TODO[PM]: Exc eption handling (empty redirect_uri, false redirect_uri, ... )
 
-            State state = new State(params.get("state"));
+            client_id = params.get("client_id");
+            checkIfEmpty(client_id, "Client ID");
+            Client client = OIDCCache.getCfgDB().getClientByID(client_id);
+
+            redirect_uri = params.get("redirect_uri");
+            checkIfEmpty(redirect_uri, "Redirect URI");
+            if (!client.getRedirect_uris().contains(redirect_uri)) {
+                _log.warn("Redirect URI was not found in database");
+                //throw new OIDCNotFoundInDatabaseException("Redirect URI was not found in database");
+            }
+
+            state = params.get("state");
+            checkIfEmpty(state, "State");
+            State stateInstance = new State(state);
 
             AuthorizationCode code = new AuthorizationCode();
             TokenCollection collection = generateTokenCollection(servletRequest);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
-            AuthenticationSuccessResponse response = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, state, state, ResponseMode.QUERY);
+            AuthenticationSuccessResponse response
+                    = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, stateInstance, stateInstance, ResponseMode.QUERY);
             return response.toHTTPResponse();
         } catch (URISyntaxException | SerializeException ex) {
-            Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
+            _log.warn("Caught Exception in HTTPResponse.generateCode(): ", ex);
             return null;
+        }
+    }
+
+    private static void checkIfEmpty(String doubtfulString, String parameterName) throws OIDCMissingArgumentException {
+        if (doubtfulString == null || doubtfulString.isEmpty()) {
+            _log.warn("Parameter " + parameterName + " was not found in request");
+            throw new OIDCMissingArgumentException("Parameter " + parameterName + " was not found in request");
         }
     }
 
     /**
      *
      * @param request
-     * @return
-     * TODO [PM]: Check Signature creation and verification
+     * @return TODO [PM]: Check Signature creation and verification
      */
     public static HTTPResponse generateAuthenticationResponse(HTTPRequest request) {
         try {
@@ -115,15 +135,17 @@ public class OIDCManager {
             OIDCAccessTokenResponse response = new OIDCAccessTokenResponse(tCollection.getaToken(), tCollection.getrToken(), jwsObject.serialize());
             return response.toHTTPResponse();
 
-        } catch (JOSEException | ExecutionException | SerializeException | OIDCClientNotFoundException | ParseException ex) {
+        } catch (JOSEException | ExecutionException | SerializeException | OIDCNotFoundInDatabaseException | ParseException ex) {
             Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
     }
 
-    private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
+    private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCMissingArgumentException {
 
-        //TODO[PM&VM]: Issuer???
+        //TODO[PM&VM]: Issuer? Issuer Identifier for the Issuer of the response. 
+        // The iss value is a case sensitive URL using the https scheme that contains scheme, host, and optionally, port number and 
+        // path components and no query or fragment components.
         Issuer iss = new Issuer("skidentity.com");
 
         //TODO[PM]: Exception Handling
@@ -138,9 +160,9 @@ public class OIDCManager {
         return claimSet;
     }
 
-    private static void checkHokAuth(HttpServletRequest servletRequest, IDTokenClaimsSet claimSet) throws OIDCUserCertificateNotFoundException {
+    private static void checkHokAuth(HttpServletRequest servletRequest, IDTokenClaimsSet claimSet) throws OIDCMissingArgumentException {
         //TODO [PM]: Exception Handling: Variable Type
-        if ((boolean)servletRequest.getSession().getAttribute("hok")) {
+        if ((boolean) servletRequest.getSession().getAttribute("hok")) {
             CertificateExtractor certificateExtractor;
 
             certificateExtractor = new CertificateExtractor();
@@ -149,7 +171,7 @@ public class OIDCManager {
         }
     }
 
-    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest) throws OIDCUserCertificateNotFoundException {
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest) throws OIDCMissingArgumentException {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
         IDTokenClaimsSet claimSet = generateIDToken(servletRequest);

@@ -5,15 +5,19 @@
  */
 package rub.nds.oidc.webapp;
 
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.annotation.WebInitParam;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
+import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
+import rub.nds.oidc.oidc_op.OIDCManager;
 
 /**
  *
@@ -33,8 +37,14 @@ public class HoKServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        session.setAttribute("hok", true);
+        try {
+            request.getSession().setAttribute("hok", true);
+            HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
+            ServletUtils.applyHTTPResponse(oidc_response, response);
+        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException exception) {
+            Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
+            // TODO: Implement 'Client certificate not found' and 'OIDCClientNotFound' response
+        }
 
     }
 

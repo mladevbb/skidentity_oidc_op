@@ -27,7 +27,6 @@
  */
 package rub.nds.oidc.oidc_op;
 
-import java.util.concurrent.TimeUnit;
 import com.google.common.cache.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +39,7 @@ public class OIDCCache {
     private static final OIDCCache INSTANCE = new OIDCCache();
     private static LoadingCache<String, TokenCollection> cachedIDs;
     private static int cacheDuration = 30;
-    private static Logger _log = LoggerFactory.getLogger(OIDCCache.class);
+    private static final Logger _log = LoggerFactory.getLogger(OIDCCache.class);
     private static ConfigDatabase cfgDB;
 
     public static void setCfgDB(ConfigDatabase cfgDB) {
