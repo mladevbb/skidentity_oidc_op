@@ -44,7 +44,7 @@ public class AuthenticationSerlvet extends HttpServlet {
             HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
         } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException exception) {
-            _log.warn("Caught Exception in AuthenticationServlet.processRequest(): ", exception);
+            _log.warn("Caught Exception in AuthenticationServlet.processRequest(): " + exception.getMessage(), exception);
             response.setContentType("text/html;charset=UTF-8");
             try (PrintWriter out = response.getWriter()) {
                 out.println("<!DOCTYPE html>");
