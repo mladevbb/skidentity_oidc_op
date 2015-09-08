@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 import rub.nds.oidc.exceptions.OIDCConfigValidationException;
 
 /**
+ * The configuration manager for the database
  *
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
  */
@@ -28,6 +29,13 @@ public class ConfigurationManager implements ServletContextListener {
     private static final String configFile = "configDatabase.xml";
     private static final String schemaFile = "configDatabaseSchema.xsd";
 
+    /**
+     * Receives notification that the web application initialization process is
+     * starting.
+     *
+     * @param sce the ServletContextEvent containing the ServletContext that is
+     * being initialized
+     */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         _log.info("Initialize the ConfigurationManager (all manager)");
@@ -35,15 +43,34 @@ public class ConfigurationManager implements ServletContextListener {
         initialize();
     }
 
+    /**
+     * Receives notification that the ServletContext is about to be shut down.
+     *
+     * @param sce the ServletContextEvent containing the ServletContext that is
+     * being destroyed
+     */
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         cfgManager = null;
     }
 
+    /**
+     * The initialize method. Calls
+     * {@link ConfigurationManager#initialize(java.lang.String, java.lang.String)}
+     * with static {@code configFile} and {@code schemaFile} parameters
+     *
+     */
     public static void initialize() {
         initialize(configFile, schemaFile);
     }
 
+    /**
+     * The initialize method. {@code configFile} is used to initialize the
+     * database. {@code schemaFile} is used to validate the {@code configFile}
+     *
+     * @param configFile the XML file
+     * @param schemaFile the XSD file
+     */
     public static void initialize(String configFile, String schemaFile) {
         try {
             OIDCCache.initialize();
@@ -64,6 +91,15 @@ public class ConfigurationManager implements ServletContextListener {
         }
     }
 
+    /**
+     * Validates the XML of file at {@code xmlPath} using the XSD file at
+     * {@code xsdPath}
+     *
+     * @param xsdPath the path to the XSD file
+     * @param xmlPath the path to the XML file
+     * @throws OIDCConfigValidationException if the schema validation was not
+     * succesful
+     */
     public static void validateXMLSchema(File xsdPath, File xmlPath) throws OIDCConfigValidationException {
 
         try {
@@ -77,6 +113,14 @@ public class ConfigurationManager implements ServletContextListener {
         }
     }
 
+    /**
+     * Adds a client to the database     
+     *
+     * @param name the name of the client
+     * @param client_id the OAuth 2.0 client identifier of the client
+     * @param client_secret the secret key of the client
+     * @param redirect_uri the redirect URI of the client
+     */
     public static void addClient(String name, String client_id, String client_secret, String redirect_uri) {
         Client client = new Client();
         client.setName(name);

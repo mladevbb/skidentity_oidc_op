@@ -9,8 +9,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -23,7 +21,8 @@ import rub.nds.oidc.oidc_op.OIDCManager;
 
 /**
  *
- * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
+ * @author Vladislav Mladenov <vladislav.mladenov@rub.de>
+ * @author Philipp Markert <philipp.markert@rub.de>
  */
 @WebServlet(name = "HoKServlet")
 public class HoKServlet extends HttpServlet {
@@ -43,7 +42,7 @@ public class HoKServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             request.getSession().setAttribute("hok", true);
-            HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
+            HTTPResponse oidc_response = OIDCManager.generateCode(request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
         } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalArgumentException exception) {
             _log.warn("Caught Exception in HoKServlet.processRequest(): " + exception.getMessage(), exception);

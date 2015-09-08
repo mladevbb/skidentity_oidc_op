@@ -24,7 +24,6 @@ import com.nimbusds.oauth2.sdk.token.TokenPair;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.Nonce;
-import com.nimbusds.openid.connect.sdk.OIDCAccessTokenResponse;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import java.net.URI;
@@ -33,12 +32,22 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import javax.xml.crypto.Data;
 import net.minidev.json.JSONObject;
-import org.joda.time.DateTime;
 
+/**
+ *
+ * @author Vladislav Mladenov <vladislav.mladenov@rub.de>
+ */
 public class App {
 
+    /**
+     *
+     * @param args
+     * @throws URISyntaxException
+     * @throws SerializeException
+     * @throws ExecutionException
+     * @throws JOSEException
+     */
     public static void main(String[] args) throws URISyntaxException, SerializeException, ExecutionException, JOSEException {
         URI uri = new URI("https://c2id.com/login/");
 
