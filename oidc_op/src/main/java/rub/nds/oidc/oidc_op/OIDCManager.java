@@ -132,8 +132,8 @@ public class OIDCManager {
             redirect_uri = params.get("redirect_uri");
             checkIfEmpty(redirect_uri, "Redirect URI");
 
+            // Check needed because parse() returns null for HTTP GET method
             if (request.getMethod() == HTTPRequest.Method.POST || request.getMethod() == HTTPRequest.Method.PUT) {
-                // parse() returns null for HTTP GET method
                 client_id = ClientAuthentication.parse(request).getClientID().toString();
             } else {
                 client_id = params.get("client_id");
