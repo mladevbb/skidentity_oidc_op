@@ -8,6 +8,7 @@ package rub.nds.oidc.webapp;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -15,6 +16,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.slf4j.LoggerFactory;
 import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
 import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
 import rub.nds.oidc.oidc_op.OIDCManager;
@@ -25,6 +27,8 @@ import rub.nds.oidc.oidc_op.OIDCManager;
  */
 @WebServlet(name = "HoKServlet")
 public class HoKServlet extends HttpServlet {
+
+    private static final org.slf4j.Logger _log = LoggerFactory.getLogger(OIDCManager.class);
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,9 +45,20 @@ public class HoKServlet extends HttpServlet {
             request.getSession().setAttribute("hok", true);
             HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException exception) {
-            Logger.getLogger(AuthenticationSerlvet.class.getName()).log(Level.SEVERE, null, exception);
-            // TODO: Implement 'Client certificate not found' and 'OIDCClientNotFound' response
+        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalArgumentException exception) {
+            _log.warn("Caught Exception in HoKServlet.processRequest(): " + exception.getMessage(), exception);
+            response.setContentType("text/html;charset=UTF-8");
+            try (PrintWriter out = response.getWriter()) {
+                out.println("<!DOCTYPE html>");
+                out.println("<html>");
+                out.println("<head>");
+                out.println("<title>Authentication Error</title>");
+                out.println("</head>");
+                out.println("<body>");
+                out.println("<h1>" + exception.getMessage() + "</h1>");
+                out.println("</body>");
+                out.println("</html>");
+            }
         }
 
     }

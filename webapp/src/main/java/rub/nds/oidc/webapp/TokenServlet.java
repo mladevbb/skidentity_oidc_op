@@ -1,13 +1,19 @@
 package rub.nds.oidc.webapp;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.concurrent.ExecutionException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.slf4j.LoggerFactory;
+import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
+import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
 import rub.nds.oidc.oidc_op.OIDCManager;
 
 /**
@@ -16,6 +22,8 @@ import rub.nds.oidc.oidc_op.OIDCManager;
  */
 @WebServlet(name = "TokenServlet", urlPatterns = {"/token"})
 public class TokenServlet extends HttpServlet {
+
+    private static final org.slf4j.Logger _log = LoggerFactory.getLogger(OIDCManager.class);
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -27,12 +35,28 @@ public class TokenServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HTTPResponse oidc_response = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(request));
-        ServletUtils.applyHTTPResponse(oidc_response, response);
+            throws ServletException, IOException{
+        try {
+            HTTPResponse oidc_response = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(request));
+            ServletUtils.applyHTTPResponse(oidc_response, response);
+        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalStateException exception) {
+            _log.warn("Caught Exception in TokenServlet.processRequest(): " + exception.getMessage(), exception);
+            response.setContentType("text/html;charset=UTF-8");
+            try (PrintWriter out = response.getWriter()) {
+                out.println("<!DOCTYPE html>");
+                out.println("<html>");
+                out.println("<head>");
+                out.println("<title>Token Error </title>");
+                out.println("</head>");
+                out.println("<body>");
+                out.println("<h1>" + exception.getMessage() + "</h1>");
+                out.println("</body>");
+                out.println("</html>");
+            }
+        }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+// <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *

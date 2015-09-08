@@ -1,5 +1,6 @@
 package rub.nds.oidc.oidc_op;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -31,8 +32,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.LoggerFactory;
 import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
@@ -62,7 +61,7 @@ public class OIDCManager {
      * @throws rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException
      */
     public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest)
-            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalArgumentException {
+            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalArgumentException, IllegalArgumentException {
 
         //TODO[PM]: Empty OAuth/OIDC parameters
         try {
@@ -107,12 +106,19 @@ public class OIDCManager {
      *
      * @param request
      * @return TODO [PM]: Check Signature creation and verification
+     * @throws rub.nds.oidc.exceptions.OIDCMissingArgumentException
+     * @throws rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException
      */
-    public static HTTPResponse generateAuthenticationResponse(HTTPRequest request) {
+    public static HTTPResponse generateAuthenticationResponse(HTTPRequest request)
+            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException {
         try {
             Map<String, String> params = request.getQueryParameters();
+
             String code = params.get("code");
+            checkIfEmpty(code, "Code");
+
             redirect_uri = params.get("redirect_uri");
+            checkIfEmpty(redirect_uri, "Redirect URI");
 
             if (request.getMethod() == HTTPRequest.Method.POST || request.getMethod() == HTTPRequest.Method.PUT) {
                 // parse() returns null for HTTP GET method
@@ -120,6 +126,8 @@ public class OIDCManager {
             } else {
                 client_id = params.get("client_id");
             }
+            checkIfEmpty(client_id, "Client ID");
+            Client client = OIDCCache.getCfgDB().getClientByID(client_id);
 
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
             OIDCCache.getHandler().invalidate(code);
@@ -135,13 +143,16 @@ public class OIDCManager {
             OIDCAccessTokenResponse response = new OIDCAccessTokenResponse(tCollection.getaToken(), tCollection.getrToken(), jwsObject.serialize());
             return response.toHTTPResponse();
 
-        } catch (JOSEException | ExecutionException | SerializeException | OIDCNotFoundInDatabaseException | ParseException ex) {
-            Logger.getLogger(OIDCManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JOSEException | ExecutionException | SerializeException | ParseException ex) {
+            _log.warn("Caught Exception in HTTPResponse.generateAuthenticationResponse(): ", ex);
             return null;
+        } catch (UncheckedExecutionException ex) {
+            throw new IllegalStateException(ex.getMessage().substring(32));
         }
     }
 
-    private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest) throws OIDCMissingArgumentException {
+    private static IDTokenClaimsSet generateIDToken(HttpServletRequest servletRequest)
+            throws OIDCMissingArgumentException, IllegalArgumentException {
 
         //TODO[PM&VM]: Issuer? Issuer Identifier for the Issuer of the response. 
         // The iss value is a case sensitive URL using the https scheme that contains scheme, host, and optionally, port number and 
@@ -153,25 +164,29 @@ public class OIDCManager {
 
         List<Audience> audience = new ArrayList();
         audience.add(new Audience(client_id));
-        IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, new Date(), new Date());
+        IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, new Date(System.currentTimeMillis() + 120000), new Date());
 
         checkHokAuth(servletRequest, claimSet);
 
         return claimSet;
     }
 
-    private static void checkHokAuth(HttpServletRequest servletRequest, IDTokenClaimsSet claimSet) throws OIDCMissingArgumentException {
+    private static void checkHokAuth(HttpServletRequest servletRequest, IDTokenClaimsSet claimSet)
+            throws OIDCMissingArgumentException, IllegalArgumentException {
         //TODO [PM]: Exception Handling: Variable Type
-        if ((boolean) servletRequest.getSession().getAttribute("hok")) {
-            CertificateExtractor certificateExtractor;
-
-            certificateExtractor = new CertificateExtractor();
-            X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
-            claimSet.setClaim("user_cert", userCertificate);
+        if (servletRequest.getSession().getAttribute("hok") instanceof Boolean) {
+            if ((boolean) servletRequest.getSession().getAttribute("hok")) {
+                CertificateExtractor certificateExtractor = new CertificateExtractor();
+                X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
+                claimSet.setClaim("user_cert", userCertificate);
+            }
+        } else {
+            throw new IllegalArgumentException("Illegal argument found for attribute 'hok'");
         }
     }
 
-    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest) throws OIDCMissingArgumentException {
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest)
+            throws OIDCMissingArgumentException, IllegalArgumentException {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
         IDTokenClaimsSet claimSet = generateIDToken(servletRequest);

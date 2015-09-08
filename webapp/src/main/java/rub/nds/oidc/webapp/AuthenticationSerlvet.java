@@ -38,12 +38,12 @@ public class AuthenticationSerlvet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, IllegalArgumentException {
         try {
             request.getSession().setAttribute("hok", false);
             HTTPResponse oidc_response = OIDCManager.generateCode(ServletUtils.createHTTPRequest(request), request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException exception) {
+        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalArgumentException exception) {
             _log.warn("Caught Exception in AuthenticationServlet.processRequest(): " + exception.getMessage(), exception);
             response.setContentType("text/html;charset=UTF-8");
             try (PrintWriter out = response.getWriter()) {
