@@ -1,13 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package rub.nds.oidc.exceptions;
 
 /**
- *
- * @author philipp
+ * Missing argument exception used when a required argument is missing 
+ * 
+ * @author Philipp Markert <philipp.markert@rub.de>
  */
 public class OIDCMissingArgumentException extends Exception {
 

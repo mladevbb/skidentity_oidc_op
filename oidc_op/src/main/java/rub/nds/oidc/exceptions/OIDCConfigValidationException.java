@@ -1,11 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package rub.nds.oidc.exceptions;
 
 /**
+ * Configuration validation exception used for XML schema validation
  *
  * @author Vladislav Mladenov<vladislav.mladenov@rub.de>
  */

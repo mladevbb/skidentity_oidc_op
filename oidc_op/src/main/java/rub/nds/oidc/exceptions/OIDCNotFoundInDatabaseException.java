@@ -1,13 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package rub.nds.oidc.exceptions;
 
 /**
+ * Not found in database exception used when a given parameter could not be found in the database
  *
- * @author philipp
+ * @author Philipp Markert <philipp.markert@rub.de>
  */
 public class OIDCNotFoundInDatabaseException extends Exception {
 
