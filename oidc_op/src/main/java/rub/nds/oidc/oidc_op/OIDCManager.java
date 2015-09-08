@@ -63,7 +63,6 @@ public class OIDCManager {
     public static HTTPResponse generateCode(HTTPRequest request, HttpServletRequest servletRequest)
             throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalArgumentException, IllegalArgumentException {
 
-        //TODO[PM]: Empty OAuth/OIDC parameters
         try {
             Map<String, String> params = request.getQueryParameters();
 
@@ -105,7 +104,7 @@ public class OIDCManager {
     /**
      *
      * @param request
-     * @return TODO [PM]: Check Signature creation and verification
+     * @return
      * @throws rub.nds.oidc.exceptions.OIDCMissingArgumentException
      * @throws rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException
      */
@@ -159,8 +158,9 @@ public class OIDCManager {
         // path components and no query or fragment components.
         Issuer iss = new Issuer("skidentity.com");
 
-        //TODO[PM]: Exception Handling
-        Subject sub = new Subject(servletRequest.getUserPrincipal().getName());
+        String subjectString = servletRequest.getUserPrincipal().getName();
+        checkIfEmpty(subjectString, "Subject");
+        Subject sub = new Subject(subjectString);
 
         List<Audience> audience = new ArrayList();
         audience.add(new Audience(client_id));
@@ -173,7 +173,6 @@ public class OIDCManager {
 
     private static void checkHokAuth(HttpServletRequest servletRequest, IDTokenClaimsSet claimSet)
             throws OIDCMissingArgumentException, IllegalArgumentException {
-        //TODO [PM]: Exception Handling: Variable Type
         if (servletRequest.getSession().getAttribute("hok") instanceof Boolean) {
             if ((boolean) servletRequest.getSession().getAttribute("hok")) {
                 CertificateExtractor certificateExtractor = new CertificateExtractor();
