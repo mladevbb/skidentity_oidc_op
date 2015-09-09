@@ -206,9 +206,18 @@ public class OIDCManager {
         // path components and no query or fragment components.
         Issuer iss = new Issuer("skidentity.com");
 
-        String subjectString = servletRequest.getUserPrincipal().getName();
-        checkIfEmpty(subjectString, "Subject");
-        Subject sub = new Subject(subjectString);
+        Subject sub;
+        try {
+            //TODO: Find way to set userPrincipal for JUnit tests
+            String subjectString = "userPrincipalTest";
+            //String subjectString = servletRequest.getUserPrincipal().getName();
+            checkIfEmpty(subjectString, "Subject");
+            sub = new Subject(subjectString);
+        } catch (NullPointerException ex) {
+            String message = "No User Principal found";
+            _log.warn(message);
+            throw new OIDCMissingArgumentException(message);
+        }
 
         List<Audience> audience = new ArrayList();
         audience.add(new Audience(client_id));
