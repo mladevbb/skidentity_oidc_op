@@ -132,6 +132,7 @@ public class OIDCManager {
             redirect_uri = params.get("redirect_uri");
             checkIfEmpty(redirect_uri, "Redirect URI");
 
+            // ClientID - used as the username - may be located in the HTTP Header when Basic Authentication is used.
             // Check needed because parse() returns null for HTTP GET method
             if (request.getMethod() == HTTPRequest.Method.POST || request.getMethod() == HTTPRequest.Method.PUT) {
                 client_id = ClientAuthentication.parse(request).getClientID().toString();
@@ -208,9 +209,7 @@ public class OIDCManager {
 
         Subject sub;
         try {
-            //TODO: Find way to set userPrincipal for JUnit tests
-            String subjectString = "userPrincipalTest";
-            //String subjectString = servletRequest.getUserPrincipal().getName();
+            String subjectString = servletRequest.getUserPrincipal().getName();
             checkIfEmpty(subjectString, "Subject");
             sub = new Subject(subjectString);
         } catch (NullPointerException ex) {
