@@ -231,7 +231,7 @@ public class OIDCManagerTest {
         String extractedCertificate = idToken.getJWTClaimsSet().getStringClaim("user_cert");
         X509Certificate attackerCertificate = importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/attacker.pem");
         Base64 base64EncodeCertificate = Base64.encode(attackerCertificate.toString());
-        Assert.assertNotEquals(attackerCertificate, base64EncodeCertificate.toString());
+        Assert.assertNotEquals(extractedCertificate, base64EncodeCertificate.toString());
     }
 
     @Test(expected = OIDCMissingArgumentException.class)
