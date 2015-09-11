@@ -46,7 +46,6 @@ import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
  * @author Vladislav Mladenov <vladislav.mladenov@rub.de>
  * @author Philipp Markert <philipp.markert@rub.de>
  *
- * TODO[PM]: Unit Tests
  */
 public class OIDCManager {
 

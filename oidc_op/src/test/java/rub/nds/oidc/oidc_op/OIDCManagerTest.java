@@ -37,6 +37,9 @@ public class OIDCManagerTest {
     public OIDCManagerTest() {
     }
 
+    /**
+     *
+     */
     @BeforeClass
     public static void setUpClass() {
         ConfigurationManager.initialize();
@@ -54,6 +57,10 @@ public class OIDCManagerTest {
     public void tearDown() {
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void testGenerateCodeAllParameters() throws Exception {
         MockHttpServletRequest servletRequest
@@ -62,6 +69,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeEmptyRedirectUri() throws Exception {
         MockHttpServletRequest servletRequest
@@ -70,6 +81,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeMissingRedirectUri() throws Exception {
         MockHttpServletRequest servletRequest
@@ -78,6 +93,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeEmptyState() throws Exception {
         MockHttpServletRequest servletRequest
@@ -86,6 +105,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeMissingState() throws Exception {
         MockHttpServletRequest servletRequest
@@ -94,6 +117,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeEmptyClientID() throws Exception {
         MockHttpServletRequest servletRequest
@@ -102,6 +129,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeMissingClientID() throws Exception {
         MockHttpServletRequest servletRequest = generateMockServletRequest("GET", "/webapp/auth", "redirect_uri=http://cloud.nds.rub.de:8067/&state=1909");
@@ -109,6 +140,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCNotFoundInDatabaseException.class)
     public void testGenerateCodeWrongClientID() throws Exception {
         MockHttpServletRequest servletRequest = generateMockServletRequest("GET", "/webapp/auth", "redirect_uri=http://cloud.nds.rub.de:8067/&state=1909&client_id=123");
@@ -116,6 +151,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = IllegalArgumentException.class)
     public void testGenerateCodeWithWrongHokFlagType() throws Exception {
         MockHttpServletRequest servletRequest = generateMockServletRequest("GET", "/webapp/auth", "redirect_uri=http://cloud.nds.rub.de:8067/&state=1909&client_id=Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU");
@@ -124,6 +163,10 @@ public class OIDCManagerTest {
         HTTPResponse result = OIDCManager.generateCode(servletRequest);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void testGenerateAuthenticationResponseAllParametersGET() throws Exception {
         HTTPResponse codeResponse = generateHttpResponse();
@@ -134,6 +177,10 @@ public class OIDCManagerTest {
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void testGenerateAuthenticationResponseAllParametersPOST() throws Exception {
         HTTPResponse codeResponse = generateHttpResponse();
@@ -154,6 +201,10 @@ public class OIDCManagerTest {
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateAuthenticationResponseWithoutCode() throws Exception {
         HTTPResponse codeResponse = generateHttpResponse();
@@ -164,6 +215,10 @@ public class OIDCManagerTest {
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = IllegalStateException.class)
     public void testGenerateAuthenticationResponseForgedCode() throws Exception {
         MockHttpServletRequest servletRequest
@@ -171,6 +226,10 @@ public class OIDCManagerTest {
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = IllegalStateException.class)
     public void testGenerateAuthenticationResponseMultipleCodeUsage() throws Exception {
         HTTPResponse codeResponse = generateHttpResponse();
@@ -183,6 +242,10 @@ public class OIDCManagerTest {
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateAuthenticationResponseWithoutRedirectUri() throws Exception {
         HTTPResponse codeResponse = generateHttpResponse();
@@ -193,6 +256,10 @@ public class OIDCManagerTest {
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateAuthenticationResponseWithoutClienID() throws Exception {
         HTTPResponse codeResponse = generateHttpResponse();
@@ -203,6 +270,10 @@ public class OIDCManagerTest {
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void testGenerateAuthenticationResponseHolderOfKey() throws Exception {
         X509Certificate userCertificate = importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/userSelfSigned.pem");
@@ -218,6 +289,10 @@ public class OIDCManagerTest {
         Assert.assertEquals(extractedCertificate, base64EncodeUserCertificate.toString());
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void testGenerateAuthenticationResponseHolderOfKeyAttack() throws Exception {
         X509Certificate userCertificate = importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/userSelfSigned.pem");
@@ -234,6 +309,10 @@ public class OIDCManagerTest {
         Assert.assertNotEquals(extractedCertificate, base64EncodeCertificate.toString());
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeHolderOfKeyWithoutClientCertificate() throws Exception {
         MockHttpServletRequest servletRequest
