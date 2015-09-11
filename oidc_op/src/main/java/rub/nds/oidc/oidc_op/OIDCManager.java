@@ -7,6 +7,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.util.Base64;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
@@ -249,7 +250,7 @@ public class OIDCManager {
             if ((boolean) servletRequest.getSession().getAttribute("hok")) {
                 CertificateExtractor certificateExtractor = new CertificateExtractor();
                 X509Certificate userCertificate = certificateExtractor.extractCertificate(servletRequest);
-                claimSet.setClaim("user_cert", userCertificate);
+                claimSet.setClaim("user_cert", Base64.encode(userCertificate.toString()));
             }
         } else {
             throw new IllegalArgumentException("Illegal argument found for attribute 'hok'");
