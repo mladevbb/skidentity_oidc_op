@@ -1,5 +1,8 @@
 package rub.nds.oidc.oidc_op;
 
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -302,6 +305,11 @@ public class OIDCManagerTest {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&redirect_uri=http://cloud.nds.rub.de:8067/&client_id=Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU");
         HTTPResponse authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        
+        JWSObject idTokenToBeVerified = JWSObject.parse(OIDCAccessTokenResponse.parse(authenticationResponse).getIDTokenString());
+        JWSVerifier verifier = new MACVerifier("P1vhVxcD2BNY0kPzyrQAOcnLkrOH8A0wkRysGocU0U8");
+        Assert.assertTrue(idTokenToBeVerified.verify(verifier));
+        
         JWT idToken = OIDCAccessTokenResponse.parse(authenticationResponse).getIDToken();
         String extractedCertificate = idToken.getJWTClaimsSet().getStringClaim("user_cert");
         X509Certificate attackerCertificate = importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/attacker.pem");

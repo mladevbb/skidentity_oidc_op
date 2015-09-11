@@ -222,7 +222,7 @@ public class OIDCManager {
         audience.add(new Audience(client_id));
 
         Date issueDate = new Date();
-        Date expirationDate = new Date(System.currentTimeMillis() + 120000);
+        Date expirationDate = new Date(System.currentTimeMillis() + 120 * 1000);
 
         IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, expirationDate, issueDate);
 
