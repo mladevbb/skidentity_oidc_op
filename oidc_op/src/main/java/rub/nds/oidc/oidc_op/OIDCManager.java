@@ -97,7 +97,7 @@ public class OIDCManager {
 
             // Generate a code as well as the tokens and put them in the cache
             AuthorizationCode code = new AuthorizationCode();
-            TokenCollection collection = generateTokenCollection(servletRequest);
+            TokenCollection collection = generateTokenCollection(servletRequest, client_id);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
             AuthenticationSuccessResponse response
@@ -123,7 +123,7 @@ public class OIDCManager {
      * database
      */
     public static HTTPResponse generateAuthenticationResponse(HTTPRequest request)
-            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException {
+            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalStateException {
         try {
             Map<String, String> params = request.getQueryParameters();
 
@@ -142,9 +142,15 @@ public class OIDCManager {
             }
             checkIfEmpty(client_id, "Client ID");
             Client client = OIDCCache.getCfgDB().getClientByID(client_id);
-
-            // Invalidate the code and replace it with the corresponding access token
+            // Check if code was issued to the specified client
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
+            if(!tCollection.getOptionalParameters().containsValue(client_id)) {
+                _log.warn("Code was not issued to the specified client");
+                throw new IllegalStateException("Code was not issued to the specified client");
+            }
+            tCollection.getOptionalParameters().remove("client_id");
+            
+            // Invalidate the code and replace it with the corresponding access token
             OIDCCache.getHandler().invalidate(code);
             OIDCCache.getHandler().put(tCollection.getAccessToken().getValue(), tCollection);
 
@@ -163,6 +169,7 @@ public class OIDCManager {
             _log.warn("Caught Exception in HTTPResponse.generateAuthenticationResponse(): ", ex);
             return null;
         } catch (UncheckedExecutionException ex) {
+            // OIDCache throws UncheckedExecutionException which contains an IllegalStateException
             throw new IllegalStateException(ex.getMessage().substring(32));
         }
     }
@@ -179,13 +186,14 @@ public class OIDCManager {
      * @throws IllegalArgumentException If the parameter 'hok' in the
      * {@code servletRequest} does not contain a boolean
      */
-    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest)
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest, String clientId)
             throws OIDCMissingArgumentException, IllegalArgumentException {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
         IDTokenClaimsSet claimSet = generateIDToken(servletRequest);
         Map<String,Object> optionalParameters = new HashMap();
         optionalParameters.put("expires_in", 1800);
+        optionalParameters.put("client_id", clientId);
         
         return new TokenCollection(token, rToken, claimSet, optionalParameters);
     }
