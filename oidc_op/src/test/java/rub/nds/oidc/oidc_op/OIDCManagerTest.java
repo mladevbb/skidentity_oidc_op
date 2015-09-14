@@ -6,6 +6,7 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.ReadOnlyJWTClaimsSet;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
@@ -18,6 +19,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Map;
 import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.List;
 import org.apache.struts.mock.MockPrincipal;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -94,9 +97,8 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Test OIDCManager.generateCode() without {@code scope}. No
-     * {@code scope} parameter is transmitted at all ->
-     * OIDCMissingArgumentException exptected
+     * Test OIDCManager.generateCode() without {@code scope}. No {@code scope}
+     * parameter is transmitted at all -> OIDCMissingArgumentException exptected
      *
      * @throws Exception
      */
@@ -109,7 +111,7 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Test OIDCManager.generateCode() with a {@code scope} that does not 
+     * Test OIDCManager.generateCode() with a {@code scope} that does not
      * contain the substring 'openid'. -> IllegalArgumentException exptected
      *
      * @throws Exception
@@ -168,9 +170,8 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Test OIDCManager.generateCode() without {@code state}. No
-     * {@code state} parameter is transmitted at all ->
-     * OIDCMissingArgumentException exptected
+     * Test OIDCManager.generateCode() without {@code state}. No {@code state}
+     * parameter is transmitted at all -> OIDCMissingArgumentException exptected
      *
      * @throws Exception
      */
@@ -183,8 +184,8 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Test OIDCManager.generateCode() with empty {@code client_id}. 
-     * The {@code client_id} parameter contains an empty string ->
+     * Test OIDCManager.generateCode() with empty {@code client_id}. The
+     * {@code client_id} parameter contains an empty string ->
      * OIDCMissingArgumentException exptected
      *
      * @throws Exception
@@ -369,10 +370,30 @@ public class OIDCManagerTest {
     }
 
     /**
+     * Test OIDCManager.generateAuthenticationResponse() with a
+     * {@code client_id} which is existing in the database but has not been used
+     * in the code request. At first a {@code code} is generated. Afterwards
+     * another exisiting {@code client_id} is provided in an HTTP GET request ->
+     * IllegalStateException expected
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testGenerateAuthenticationResponseWithWrongClientID() throws Exception {
+        codeResponse = generateCodeResponse();
+        Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
+        String code = locationQueryParameters.get("code");
+
+        MockHttpServletRequest servletRequest
+                = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery + "&client_id=XKzid9EjileQF9AmyKFk7bXuccN_B6RmRJLqMVH9txI");
+        authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+    }
+
+    /**
      * Test the holder-of-key function. 
      * 1. A valid {@code code} is generated using holder-of-key 
      * 2. Exchange the {@code code} for the tokens (Access/ID/Refresh token) 
-     * 3. Validate the ID token
+     * 3. Validate the ID token 
      * 4. Extract the certificate from the ID token 
      * 5. Compare both certificates
      *
@@ -389,7 +410,7 @@ public class OIDCManagerTest {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery + "&" + client_idQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
-        
+
         Assert.assertTrue(validateIdToken(authenticationResponse));
 
         JWT idToken = OIDCAccessTokenResponse.parse(authenticationResponse).getIDToken();
@@ -402,9 +423,9 @@ public class OIDCManagerTest {
      * Try to circumvent the holder-of-key function. 
      * 1. A valid {@code code} is generated using holder-of-key 
      * 2. Exchange the {@code code} for the tokens (Access/ID/Refresh token) 
-     * 3. Validate the ID token
+     * 3. Validate the ID token 
      * 4. Extract the certificate from the ID token 
-     * 5. Introduce an attacker certificate
+     * 5. Introduce an attacker certificate 
      * 6. Compare the extracted certificate with the one from the attacker
      *
      * @throws Exception
@@ -413,28 +434,28 @@ public class OIDCManagerTest {
     public void testGenerateAuthenticationResponseHolderOfKeyAttack() throws Exception {
         X509Certificate userCertificate = importX509Certificate("userSelfSigned.pem");
         codeResponse = generateHokHttpResponse(userCertificate);
-        
+
         Map<String, String> codeResponseLocationQueryParameters = getLocationQueryParameters(codeResponse);
         String code = codeResponseLocationQueryParameters.get("code");
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery + "&" + client_idQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
-        
+
         Assert.assertTrue(validateIdToken(authenticationResponse));
 
         JWT idToken = OIDCAccessTokenResponse.parse(authenticationResponse).getIDToken();
         String extractedCertificate = idToken.getJWTClaimsSet().getStringClaim("user_cert");
-        
-        X509Certificate attackerCertificate = 
-                importX509Certificate("attacker.pem");
-        
+
+        X509Certificate attackerCertificate
+                = importX509Certificate("attacker.pem");
+
         Assert.assertNotEquals(extractedCertificate, Base64.encode(attackerCertificate.toString()).toString());
     }
 
     /**
-     * Try to use holder-of-key without a certificate.
-     * Indicate that holder-of-key should be used, but do not provide a certificate 
-     * -> OIDCMissingArgumenteException expected
+     * Try to use holder-of-key without a certificate. Indicate that
+     * holder-of-key should be used, but do not provide a certificate ->
+     * OIDCMissingArgumenteException expected
      *
      * @throws Exception
      */
@@ -448,7 +469,7 @@ public class OIDCManagerTest {
 
     /**
      * Generate a mock HTTP servlet request
-     * 
+     *
      * @param method the HTTP method
      * @param requestURI the request URI
      * @param queryString the query string (with parameters)
@@ -469,8 +490,9 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Generates a mock HTTP servlet request with the hok flag set to {@code false}
-     * 
+     * Generates a mock HTTP servlet request with the hok flag set to
+     * {@code false}
+     *
      * @param method the HTTP method
      * @param requestURI the request URI
      * @param queryString the query string (with parameters)
@@ -482,11 +504,11 @@ public class OIDCManagerTest {
 
     /**
      * Generates a code response without holder-of-key. All required parameters
-     * are provided with valid values. 
-     * 
+     * are provided with valid values.
+     *
      * @return A code response
      * @throws OIDCNotFoundInDatabaseException
-     * @throws OIDCMissingArgumentException 
+     * @throws OIDCMissingArgumentException
      */
     private HTTPResponse generateCodeResponse() throws OIDCNotFoundInDatabaseException, OIDCMissingArgumentException {
         codeResponse = null;
@@ -504,20 +526,21 @@ public class OIDCManagerTest {
     /**
      * Generates a code response with holder-of-key. All required parameters -
      * except the certificate - are provided with valid values.
-     * 
+     *
      * @param certificate the certificate to be used for holder-of-key
-     * @return A code response 
+     * @return A code response
      * @throws OIDCMissingArgumentException
-     * @throws OIDCNotFoundInDatabaseException 
+     * @throws OIDCNotFoundInDatabaseException
      */
-    
     private HTTPResponse generateHokHttpResponse(X509Certificate certificate) throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException {
         codeResponse = null;
         try {
             MockHttpServletRequest servletRequest
                     = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.TRUE);
-            /** A certificate chain is expected by the servlet. In this case we 
-            have not got a real chain since we use a self-signed certificate. */ 
+            /**
+             * A certificate chain is expected by the servlet. In this case we
+             * have not got a real chain since we use a self-signed certificate.
+             */
             X509Certificate[] certificateChain = {certificate};
             servletRequest.setAttribute("javax.servlet.request.X509Certificate", certificateChain);
             codeResponse = OIDCManager.generateCode(servletRequest);
@@ -529,7 +552,7 @@ public class OIDCManagerTest {
 
     /**
      * Imports a certificate from a specified file.
-     * 
+     *
      * @param filename path to the certificate
      * @return An X509Certificate
      */
@@ -554,7 +577,7 @@ public class OIDCManagerTest {
 
     /**
      * Extracts the query parameters from the location of a HTTP response
-     * 
+     *
      * @param response the HTTP response
      * @return the query parameters of the location
      */
@@ -565,22 +588,60 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Validates the signature of an ID token
-     * 
+     * Validates an ID token by means of the steps from the OpenID Connect 
+     * standard (3.1.3.7.  ID Token Validation). Only applicable steps are 
+     * considered:
+     * 1. Validate the signature
+     * 2. Test if the issuer Identifier for the OpenID Provider (which is 
+     * typically obtained during Discovery) matches the value of the iss (issuer) 
+     * Claim. 
+     * 3. Test if the aud (audience) Claim contains the client_id value 
+     * registered at the Issuer identified by the iss (issuer) Claim as an audience
+     * 4. Test if the current time is be before the time represented by the exp Claim.
+     *
      * @param authenticationResponse the response containing the ID token
-     * @return {@code False} or {@code true}, depending on wether the signature 
+     * @return {@code False} or {@code true}, depending on wether the ID token
      * is valid or not
      */
     private boolean validateIdToken(HTTPResponse authenticationResponse) {
         boolean validationResult = false;
         try {
-            JWSObject idTokenToBeVerified = JWSObject.parse(OIDCAccessTokenResponse.parse(authenticationResponse).getIDTokenString());
-            // the client secret
-            JWSVerifier verifier = new MACVerifier("P1vhVxcD2BNY0kPzyrQAOcnLkrOH8A0wkRysGocU0U8");
-            validationResult = idTokenToBeVerified.verify(verifier);
-        } catch (ParseException | JOSEException | java.text.ParseException ex) {
+            ReadOnlyJWTClaimsSet claimSet = OIDCAccessTokenResponse.parse(authenticationResponse).getIDToken().getJWTClaimsSet();
+            if (validateIdTokenSignature(authenticationResponse)) {
+                if (claimSet.getClaim("iss").equals("skidentity.com")) {
+                    List<String> audienceList = (List<String>) claimSet.getClaim("aud");
+                    if (audienceList.contains("Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU")) {
+                        Date expirationDate = (Date) claimSet.getClaim("exp");
+                        Date now = new Date(System.currentTimeMillis());
+                        if (now.before(expirationDate)) {
+                            validationResult = true;
+                        }
+
+                    }
+                }
+            }
+        } catch (ParseException | java.text.ParseException ex) {
             _log.warn("Caught exception in OIDCManagerTest.validateIdToken(): " + ex.getMessage());
         }
         return validationResult;
+    }
+
+    /**
+     * Validates the signature of an ID token
+     *
+     * @param authenticationResponse the response containing the ID token
+     * @return {@code False} or {@code true}, depending on wether the signature
+     * is valid or not
+     */
+    private boolean validateIdTokenSignature(HTTPResponse authenticationResponse1) {
+        try {
+            JWSObject idTokenToBeVerified = JWSObject.parse(OIDCAccessTokenResponse.parse(authenticationResponse1).getIDTokenString());
+            // the client secret
+            JWSVerifier verifier = new MACVerifier("P1vhVxcD2BNY0kPzyrQAOcnLkrOH8A0wkRysGocU0U8");
+            return idTokenToBeVerified.verify(verifier);
+        } catch (ParseException | JOSEException | java.text.ParseException ex) {
+            _log.warn("Caught exception in OIDCManagerTest.validateIdTokenSignature(): " + ex.getMessage());
+        }
+        return false;
     }
 }

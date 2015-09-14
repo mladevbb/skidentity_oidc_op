@@ -148,6 +148,7 @@ public class OIDCManager {
                 _log.warn("Code was not issued to the specified client");
                 throw new IllegalStateException("Code was not issued to the specified client");
             }
+            // client_id only needed for the above verification -> remove now
             tCollection.getOptionalParameters().remove("client_id");
             
             // Invalidate the code and replace it with the corresponding access token
