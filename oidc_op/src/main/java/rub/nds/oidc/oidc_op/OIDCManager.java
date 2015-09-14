@@ -32,6 +32,7 @@ import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -53,7 +54,6 @@ public class OIDCManager {
     private static String client_id;
     private static String redirect_uri;
     private static String state;
-
     /**
      * Generates an HTTP response containing an OAuth 2.0 code using the
      * parameters of the {@code servletRequest}
@@ -109,13 +109,6 @@ public class OIDCManager {
         }
     }
 
-    private static void checkIfEmpty(String doubtfulString, String parameterName) throws OIDCMissingArgumentException {
-        if (doubtfulString == null || doubtfulString.isEmpty()) {
-            _log.warn("Parameter " + parameterName + " was not found in request");
-            throw new OIDCMissingArgumentException("Parameter " + parameterName + " was not found in request");
-        }
-    }
-
     /**
      * Generates an OpenID Connect authentication response. A code is expected
      * in the request and an ID token, an access token, and a refresh token are
@@ -162,7 +155,8 @@ public class OIDCManager {
             jwsObject.sign(new MACSigner(OIDCCache.getCfgDB().getClientByID(client_id).getClient_secret().getBytes()));
 
             // Serialise to URL-safe format
-            OIDCAccessTokenResponse response = new OIDCAccessTokenResponse(tCollection.getAccessToken(), tCollection.getRefreshToken(), jwsObject.serialize());
+            OIDCAccessTokenResponse response = 
+                    new OIDCAccessTokenResponse(tCollection.getAccessToken(), tCollection.getRefreshToken(), jwsObject.serialize(), tCollection.getOptionalParameters());
             return response.toHTTPResponse();
 
         } catch (JOSEException | ExecutionException | SerializeException | ParseException ex) {
@@ -190,8 +184,10 @@ public class OIDCManager {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
         IDTokenClaimsSet claimSet = generateIDToken(servletRequest);
-
-        return new TokenCollection(token, rToken, claimSet);
+        Map<String,Object> optionalParameters = new HashMap();
+        optionalParameters.put("expires_in", 1800);
+        
+        return new TokenCollection(token, rToken, claimSet, optionalParameters);
     }
 
     /**
@@ -230,13 +226,20 @@ public class OIDCManager {
         audience.add(new Audience(client_id));
 
         Date issueDate = new Date();
-        Date expirationDate = new Date(System.currentTimeMillis() + 120 * 1000);
+        Date expirationDate = new Date(System.currentTimeMillis() + (120*1000));
 
         IDTokenClaimsSet claimSet = new IDTokenClaimsSet(iss, sub, audience, expirationDate, issueDate);
 
         checkHokAuth(servletRequest, claimSet);
 
         return claimSet;
+    }
+
+    private static void checkIfEmpty(String doubtfulString, String parameterName) throws OIDCMissingArgumentException {
+        if (doubtfulString == null || doubtfulString.isEmpty()) {
+            _log.warn("Parameter " + parameterName + " was not found in request");
+            throw new OIDCMissingArgumentException("Parameter " + parameterName + " was not found in request");
+        }
     }
 
     /**
