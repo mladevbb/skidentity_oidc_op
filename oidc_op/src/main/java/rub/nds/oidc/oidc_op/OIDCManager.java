@@ -72,6 +72,14 @@ public class OIDCManager {
             HTTPRequest request = ServletUtils.createHTTPRequest(servletRequest);
             Map<String, String> params = request.getQueryParameters();
 
+            String scope = params.get("scope");
+            checkIfEmpty(scope, "scope");
+            if(!scope.contains("openid")) {
+                _log.warn("Scope does not contain 'openid'");
+                throw new IllegalArgumentException("Scope does not contain 'openid'");
+            }
+            
+            
             client_id = params.get("client_id");
             checkIfEmpty(client_id, "Client ID");
             Client client = OIDCCache.getCfgDB().getClientByID(client_id);

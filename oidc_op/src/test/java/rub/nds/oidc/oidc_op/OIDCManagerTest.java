@@ -25,6 +25,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.omg.CORBA.DynAnyPackage.Invalid;
 import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import rub.nds.oidc.exceptions.OIDCMissingArgumentException;
@@ -38,6 +39,7 @@ import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
 public class OIDCManagerTest {
 
     private static final org.slf4j.Logger _log = LoggerFactory.getLogger(OIDCManager.class);
+    String scope = "scope=openid";
     String redirect_uriQuery = "redirect_uri=http://cloud.nds.rub.de:8067/";
     String stateQuery = "state=1909";
     String client_idQuery = "client_id=Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU";
@@ -78,6 +80,50 @@ public class OIDCManagerTest {
     }
 
     /**
+     * Test OIDCManager.generateCode() with empty {@code scope}. The
+     * {@code scope} parameter contains an empty string ->
+     * OIDCMissingArgumentException exptected
+     *
+     * @throws Exception
+     */
+    @Test(expected = OIDCMissingArgumentException.class)
+    public void testGenerateCodeEmptyScope() throws Exception {
+        MockHttpServletRequest servletRequest
+                = generateMockServletRequest("GET", "/webapp/auth", "scope=&" + "redirect_uri=&" + stateQuery + "&" + client_idQuery);
+
+        codeResponse = OIDCManager.generateCode(servletRequest);
+    }
+
+    /**
+     * Test OIDCManager.generateCode() without {@code scope}. No
+     * {@code scope} parameter is transmitted at all ->
+     * OIDCMissingArgumentException exptected
+     *
+     * @throws Exception
+     */
+    @Test(expected = OIDCMissingArgumentException.class)
+    public void testGenerateCodeMissingScope() throws Exception {
+        MockHttpServletRequest servletRequest
+                = generateMockServletRequest("GET", "/webapp/auth", stateQuery + "&" + client_idQuery);
+
+        codeResponse = OIDCManager.generateCode(servletRequest);
+    }
+
+    /**
+     * Test OIDCManager.generateCode() with a {@code scope} that does not 
+     * contain the substring 'openid'. -> IllegalArgumentException exptected
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testGenerateCodeWrongScope() throws Exception {
+        MockHttpServletRequest servletRequest
+                = generateMockServletRequest("GET", "/webapp/auth", "scope=open" + "&" + stateQuery + "&" + client_idQuery);
+
+        codeResponse = OIDCManager.generateCode(servletRequest);
+    }
+
+    /**
      * Test OIDCManager.generateCode() with empty {@code redirect_uri}. The
      * {@code redirect_uri} parameter contains an empty string ->
      * OIDCMissingArgumentException exptected
@@ -87,7 +133,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeEmptyRedirectUri() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", "redirect_uri=&" + stateQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + "redirect_uri=&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -102,7 +148,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeMissingRedirectUri() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", stateQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -117,7 +163,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeEmptyState() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&state=&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&state=&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -132,7 +178,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeMissingState() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -147,7 +193,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeEmptyClientID() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery + "&client_id=");
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&client_id=");
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -162,7 +208,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCMissingArgumentException.class)
     public void testGenerateCodeMissingClientID() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -177,7 +223,7 @@ public class OIDCManagerTest {
     @Test(expected = OIDCNotFoundInDatabaseException.class)
     public void testGenerateCodeWrongClientID() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery + "&client_id=123");
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&client_id=123");
 
         codeResponse = OIDCManager.generateCode(servletRequest);
     }
@@ -192,7 +238,7 @@ public class OIDCManagerTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testGenerateCodeWithInvalidHokFlagType() throws Exception {
-        MockHttpServletRequest servletRequest = generateMockServletRequest("GET", "/webapp/auth/hok", redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
+        MockHttpServletRequest servletRequest = generateMockServletRequest("GET", "/webapp/auth/hok", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
         servletRequest.getSession().setAttribute("hok", "123");
 
         codeResponse = OIDCManager.generateCode(servletRequest);
@@ -447,7 +493,7 @@ public class OIDCManagerTest {
         codeResponse = null;
         try {
             MockHttpServletRequest servletRequest
-                    = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.FALSE);
+                    = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.FALSE);
 
             codeResponse = OIDCManager.generateCode(servletRequest);
         } catch (IllegalArgumentException ex) {
@@ -470,7 +516,7 @@ public class OIDCManagerTest {
         codeResponse = null;
         try {
             MockHttpServletRequest servletRequest
-                    = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.TRUE);
+                    = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.TRUE);
             /** A certificate chain is expected by the servlet. In this case we 
             have not got a real chain since we use a self-signed certificate. */ 
             X509Certificate[] certificateChain = {certificate};
