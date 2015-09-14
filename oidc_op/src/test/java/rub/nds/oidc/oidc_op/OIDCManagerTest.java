@@ -336,7 +336,7 @@ public class OIDCManagerTest {
     @Test
     public void testGenerateAuthenticationResponseHolderOfKey() throws Exception {
         X509Certificate userCertificate
-                = importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/userSelfSigned.pem");
+                = importX509Certificate("userSelfSigned.pem");
         codeResponse = generateHokHttpResponse(userCertificate);
 
         Map<String, String> codeResponseLocationQueryParameters = getLocationQueryParameters(codeResponse);
@@ -366,7 +366,7 @@ public class OIDCManagerTest {
      */
     @Test
     public void testGenerateAuthenticationResponseHolderOfKeyAttack() throws Exception {
-        X509Certificate userCertificate = importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/userSelfSigned.pem");
+        X509Certificate userCertificate = importX509Certificate("userSelfSigned.pem");
         codeResponse = generateHokHttpResponse(userCertificate);
         
         Map<String, String> codeResponseLocationQueryParameters = getLocationQueryParameters(codeResponse);
@@ -381,7 +381,7 @@ public class OIDCManagerTest {
         String extractedCertificate = idToken.getJWTClaimsSet().getStringClaim("user_cert");
         
         X509Certificate attackerCertificate = 
-                importX509Certificate("/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/user/attacker.pem");
+                importX509Certificate("attacker.pem");
         
         Assert.assertNotEquals(extractedCertificate, Base64.encode(attackerCertificate.toString()).toString());
     }
@@ -493,7 +493,7 @@ public class OIDCManagerTest {
         InputStream inStream = null;
         try {
             try {
-                inStream = new FileInputStream(filename);
+                inStream = new FileInputStream("src/test/resources/" + filename);
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 cert = (X509Certificate) cf.generateCertificate(inStream);
             } finally {
