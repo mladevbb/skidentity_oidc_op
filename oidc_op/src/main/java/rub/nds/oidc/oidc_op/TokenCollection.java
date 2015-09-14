@@ -3,6 +3,7 @@ package rub.nds.oidc.oidc_op;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import java.util.Map;
 
 /**
  *
@@ -13,6 +14,7 @@ public class TokenCollection {
     private AccessToken accessToken;
     private RefreshToken refreshToken;
     private IDTokenClaimsSet idToken;
+    private Map<String,Object> optionalParameters;
 
     public TokenCollection(AccessToken accessToken, IDTokenClaimsSet idToken) {
         this.accessToken = accessToken;
@@ -23,6 +25,13 @@ public class TokenCollection {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.idToken = idToken;
+    }
+
+    public TokenCollection(AccessToken accessToken, RefreshToken refreshToken, IDTokenClaimsSet idToken, Map<String,Object> optionalParameters) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.idToken = idToken;
+        this.optionalParameters = optionalParameters;
     }
 
     public AccessToken getAccessToken() {
@@ -47,6 +56,14 @@ public class TokenCollection {
 
     public void setIdToken(IDTokenClaimsSet idToken) {
         this.idToken = idToken;
+    }
+
+    public Map<String, Object> getOptionalParameters() {
+        return optionalParameters;
+    }
+
+    public void setOptionalParameters(Map<String, Object> optionalParameters) {
+        this.optionalParameters = optionalParameters;
     }
 
 }
