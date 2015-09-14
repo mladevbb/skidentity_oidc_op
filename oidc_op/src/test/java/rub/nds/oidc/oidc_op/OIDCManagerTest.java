@@ -8,6 +8,7 @@ import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.ReadOnlyJWTClaimsSet;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import static com.nimbusds.oauth2.sdk.util.URLUtils.parseParameters;
@@ -15,6 +16,7 @@ import com.nimbusds.openid.connect.sdk.OIDCAccessTokenResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Map;
@@ -83,165 +85,180 @@ public class OIDCManagerTest {
 
     /**
      * Test OIDCManager.generateCode() with empty {@code scope}. The
-     * {@code scope} parameter contains an empty string ->
-     * OIDCMissingArgumentException exptected
+     * {@code scope} parameter contains an empty string
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeEmptyScope() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", "scope=&" + "redirect_uri=&" + stateQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", "scope=&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_scope", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() without {@code scope}. No {@code scope}
-     * parameter is transmitted at all -> OIDCMissingArgumentException exptected
+     * parameter is transmitted at all
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeMissingScope() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", stateQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_scope", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() with a {@code scope} that does not
-     * contain the substring 'openid'. -> IllegalArgumentException exptected
+     * contain the substring 'openid'.
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGenerateCodeWrongScope() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", "scope=open" + "&" + stateQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", "scope=open&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_scope", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() with empty {@code redirect_uri}. The
-     * {@code redirect_uri} parameter contains an empty string ->
-     * OIDCMissingArgumentException exptected
+     * {@code redirect_uri} parameter contains an empty string
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeEmptyRedirectUri() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + "redirect_uri=&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() without {@code redirect_uri}. No
-     * {@code redirect_uri} parameter is transmitted at all ->
-     * OIDCMissingArgumentException exptected
+     * {@code redirect_uri} parameter is transmitted at all
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeMissingRedirectUri() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + stateQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() with empty {@code state}. The
-     * {@code state} parameter contains an empty string ->
-     * OIDCMissingArgumentException exptected
+     * {@code state} parameter contains an empty string
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeEmptyState() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&state=&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() without {@code state}. No {@code state}
-     * parameter is transmitted at all -> OIDCMissingArgumentException exptected
+     * parameter is transmitted at all
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeMissingState() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + client_idQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() with empty {@code client_id}. The
-     * {@code client_id} parameter contains an empty string ->
-     * OIDCMissingArgumentException exptected
+     * {@code client_id} parameter contains an empty string
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeEmptyClientID() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&client_id=");
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() without {@code client_id}. No
-     * {@code client_id} parameter is transmitted at all ->
-     * OIDCMissingArgumentException exptected
+     * {@code client_id} parameter is transmitted at all
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeMissingClientID() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() with wrong {@code client_id}. The
-     * transmitted {@code client_id} does not belong to a registered client ->
-     * OIDCNotFoundInDatabaseException exptected
+     * transmitted {@code client_id} does not belong to a registered client
      *
      * @throws Exception
      */
-    @Test(expected = OIDCNotFoundInDatabaseException.class)
+    @Test
     public void testGenerateCodeWrongClientID() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&client_id=123");
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
      * Test OIDCManager.generateCode() with invalid holder-of-key attribute
      * type. The holder-of-key attribute {@code hok} should either be set to
      * {@code true} or {@code false}. In this case an invalid value is
-     * transmitted -> IllegalArgumentException exptected
+     * transmitted
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGenerateCodeWithInvalidHokFlagType() throws Exception {
         MockHttpServletRequest servletRequest = generateMockServletRequest("GET", "/webapp/auth/hok", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
         servletRequest.getSession().setAttribute("hok", "123");
 
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
     /**
@@ -280,7 +297,7 @@ public class OIDCManagerTest {
         // Add Basic Authentication parameters
         String clientID = "Ek1P6CVtW9fNIRfZEyMyCanEoFUfjcNLWuxcPVmCJrU";
         String clientSecret = "P1vhVxcD2BNY0kPzyrQAOcnLkrOH8A0wkRysGocU0U8";
-        servletRequest.addHeader("Authorization", "Basic " + Base64.encode(clientID) + ":" + Base64.encode(clientSecret));
+        servletRequest.addHeader("Authorization", "Basic " + Base64.encode(clientID + ":" +clientSecret));
         // Add content
         String contentString = "code=" + code + "&" + redirect_uriQuery;
         byte[] contentByte = contentString.getBytes();
@@ -291,40 +308,40 @@ public class OIDCManagerTest {
 
     /**
      * Test OIDCManager.generateAuthenticationResponse() without a {@code code}.
-     * Try to get tokens without a {@code code} -> OIDCMissingArgumentException
+     * Try to get tokens without a {@code code}
      * expected
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateAuthenticationResponseWithoutCode() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", redirect_uriQuery + "&" + client_idQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_grant"));
     }
 
     /**
      * Test OIDCManager.generateAuthenticationResponse() with a forged
-     * {@code code}. Try to get tokens forged a {@code code} ->
-     * IllegalStateException expected
+     * {@code code}. Try to get tokens forged a {@code code}
      *
      * @throws Exception
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateAuthenticationResponseForgedCode() throws Exception {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=123&" + redirect_uriQuery + "&" + client_idQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_grant"));
     }
 
     /**
      * Test OIDCManager.generateAuthenticationResponse() with a {@code code}
-     * that has already been used. Try to get reedem a {@code code} two times ->
-     * IllegalStateException expected
+     * that has already been used. Try to get reedem a {@code code} two times
      *
      * @throws Exception
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateAuthenticationResponseMultipleCodeUsage() throws Exception {
         codeResponse = generateCodeResponse();
         Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
@@ -333,16 +350,17 @@ public class OIDCManagerTest {
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery + "&" + client_idQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_grant"));
     }
 
     /**
      * Test OIDCManager.generateAuthenticationResponse() with missing
      * {@code redirect_uri}. No {@code redirect_uri} parameter is transmitted at
-     * all -> OIDCMissingArgumentException exptected
+     * all
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateAuthenticationResponseWithoutRedirectUri() throws Exception {
         codeResponse = generateCodeResponse();
         Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
@@ -350,16 +368,16 @@ public class OIDCManagerTest {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + client_idQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_request"));
     }
 
     /**
      * Test OIDCManager.generateAuthenticationResponse() with missing
      * {@code client_id}. No {@code client_id} parameter is transmitted at all
-     * -> OIDCMissingArgumentException exptected
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateAuthenticationResponseWithoutClienID() throws Exception {
         codeResponse = generateCodeResponse();
         Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
@@ -367,18 +385,18 @@ public class OIDCManagerTest {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery);
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_request"));
     }
 
     /**
      * Test OIDCManager.generateAuthenticationResponse() with a
      * {@code client_id} which is existing in the database but has not been used
      * in the code request. At first a {@code code} is generated. Afterwards
-     * another exisiting {@code client_id} is provided in an HTTP GET request ->
-     * IllegalStateException expected
+     * another exisiting {@code client_id} is provided in an HTTP GET request
      *
      * @throws Exception
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateAuthenticationResponseWithWrongClientID() throws Exception {
         codeResponse = generateCodeResponse();
         Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
@@ -387,6 +405,7 @@ public class OIDCManagerTest {
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery + "&client_id=XKzid9EjileQF9AmyKFk7bXuccN_B6RmRJLqMVH9txI");
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_grant"));
     }
 
     /**
@@ -454,19 +473,22 @@ public class OIDCManagerTest {
 
     /**
      * Try to use holder-of-key without a certificate. Indicate that
-     * holder-of-key should be used, but do not provide a certificate ->
-     * OIDCMissingArgumenteException expected
+     * holder-of-key should be used, but do not provide a certificate
      *
      * @throws Exception
      */
-    @Test(expected = OIDCMissingArgumentException.class)
+    @Test
     public void testGenerateCodeHolderOfKeyWithoutClientCertificate() throws Exception {
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery);
         servletRequest.getSession().setAttribute("hok", Boolean.TRUE);
         codeResponse = OIDCManager.generateCode(servletRequest);
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
+    
+    
     /**
      * Generate a mock HTTP servlet request
      *
@@ -517,7 +539,7 @@ public class OIDCManagerTest {
                     = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.FALSE);
 
             codeResponse = OIDCManager.generateCode(servletRequest);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | URISyntaxException | SerializeException | IOException ex) {
             _log.warn("Caught exception in OIDCManagerTest.generateHttpResponse(): " + ex.getMessage());
         }
         return codeResponse;
@@ -544,7 +566,7 @@ public class OIDCManagerTest {
             X509Certificate[] certificateChain = {certificate};
             servletRequest.setAttribute("javax.servlet.request.X509Certificate", certificateChain);
             codeResponse = OIDCManager.generateCode(servletRequest);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | URISyntaxException | SerializeException | IOException ex) {
             _log.warn("Caught exception in OIDCManagerTest.generateHokHttpResponse(): " + ex.getMessage());
         }
         return codeResponse;
@@ -616,7 +638,6 @@ public class OIDCManagerTest {
                         if (now.before(expirationDate)) {
                             validationResult = true;
                         }
-
                     }
                 }
             }

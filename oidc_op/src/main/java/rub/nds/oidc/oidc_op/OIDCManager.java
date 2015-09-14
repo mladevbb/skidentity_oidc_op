@@ -9,9 +9,12 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.util.Base64;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.SerializeException;
+import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -23,6 +26,7 @@ import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCAccessTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
@@ -54,58 +58,79 @@ public class OIDCManager {
     private static String client_id;
     private static String redirect_uri;
     private static String state;
+    private static State stateInstance = null;
+
     /**
      * Generates an HTTP response containing an OAuth 2.0 code using the
      * parameters of the {@code servletRequest}
      *
      * @param servletRequest the request of the servlet
      * @return A HTTPResponse containing an OAuth 2.0 code
-     * @throws rub.nds.oidc.exceptions.OIDCMissingArgumentException If a
-     * required argument is missing in the {@code servletRequest}
-     * @throws rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException If a
-     * transmitted parameter of the {@code servletRequest} could not be found in
-     * the database
+     * @throws java.net.URISyntaxException
+     * @throws com.nimbusds.oauth2.sdk.SerializeException
+     * @throws java.io.IOException
      */
     public static HTTPResponse generateCode(HttpServletRequest servletRequest)
-            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalArgumentException, IllegalArgumentException {
+            throws URISyntaxException, SerializeException, IOException {
         try {
             HTTPRequest request = ServletUtils.createHTTPRequest(servletRequest);
             Map<String, String> params = request.getQueryParameters();
 
-            String scope = params.get("scope");
-            checkIfEmpty(scope, "scope");
-            if(!scope.contains("openid")) {
-                _log.warn("Scope does not contain 'openid'");
-                throw new IllegalArgumentException("Scope does not contain 'openid'");
+            // URI Constructor in AuthenticationErrorResponse() does not accept
+            // empty strings. A placeholder is needed in case request
+            // redirect_uri is empty
+            redirect_uri = "www.foo.bar";
+            checkIfEmpty(params.get("redirect_uri"), "Redirect URI");
+            redirect_uri = params.get("redirect_uri");
+
+            state = params.get("state");
+            try {
+                checkIfEmpty(state, "State");
+                stateInstance = new State(state);
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn(ex.getMessage());
+                AuthenticationErrorResponse errorResponse
+                        = new AuthenticationErrorResponse(new URI(redirect_uri), new ErrorObject("invalid_request", ex.getMessage(), 302), null, null);
+                return errorResponse.toHTTPResponse();
             }
-            
-            
+
             client_id = params.get("client_id");
             checkIfEmpty(client_id, "Client ID");
             Client client = OIDCCache.getCfgDB().getClientByID(client_id);
 
-            redirect_uri = params.get("redirect_uri");
-            checkIfEmpty(redirect_uri, "Redirect URI");
             if (!client.getRedirect_uris().contains(redirect_uri)) {
                 _log.warn("Redirect URI was not found in database");
                 //throw new OIDCNotFoundInDatabaseException("Redirect URI was not found in database");
             }
 
-            state = params.get("state");
-            checkIfEmpty(state, "State");
-            State stateInstance = new State(state);
+            String scope = params.get("scope");
+            // separate try-catch needed because OpenID Connect defines a
+            // specific error response for the scope
+            try {
+                checkIfEmpty(scope, "scope");
+                if (!scope.contains("openid")) {
+                    throw new IllegalArgumentException("Scope does not contain 'openid'");
+                }
+            } catch (OIDCMissingArgumentException | IllegalArgumentException ex) {
+                _log.warn(ex.getMessage());
+                AuthenticationErrorResponse errorResponse
+                        = new AuthenticationErrorResponse(new URI(redirect_uri), new ErrorObject("invalid_scope", ex.getMessage(), 302), stateInstance, null);
+                return errorResponse.toHTTPResponse();
+            }
 
             // Generate a code as well as the tokens and put them in the cache
             AuthorizationCode code = new AuthorizationCode();
             TokenCollection collection = generateTokenCollection(servletRequest, client_id);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
-            AuthenticationSuccessResponse response
+            AuthenticationSuccessResponse successResponse
                     = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, stateInstance, stateInstance, ResponseMode.QUERY);
-            return response.toHTTPResponse();
-        } catch (URISyntaxException | SerializeException | IOException ex) {
-            _log.warn("Caught Exception in HTTPResponse.generateCode(): ", ex);
-            return null;
+            return successResponse.toHTTPResponse();
+        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalArgumentException ex) {
+            _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
+            AuthenticationErrorResponse errorResponse
+                    = new AuthenticationErrorResponse(new URI(redirect_uri), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
+            return errorResponse.toHTTPResponse();
         }
     }
 
@@ -116,22 +141,31 @@ public class OIDCManager {
      *
      * @param request an OpenID Connect authentication request
      * @return an OpenID Connect authentication response
-     * @throws rub.nds.oidc.exceptions.OIDCMissingArgumentException If a
-     * required argument is missing in the {@code request}
-     * @throws rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException If a
-     * transmitted parameter of the {@code request} could not be found in the
-     * database
+     * @throws com.nimbusds.oauth2.sdk.ParseException
+     * @throws java.util.concurrent.ExecutionException
+     * @throws com.nimbusds.jose.JOSEException
+     * @throws com.nimbusds.oauth2.sdk.SerializeException
      */
     public static HTTPResponse generateAuthenticationResponse(HTTPRequest request)
-            throws OIDCMissingArgumentException, OIDCNotFoundInDatabaseException, IllegalStateException {
+            throws ParseException, ExecutionException, JOSEException, SerializeException {
         try {
             Map<String, String> params = request.getQueryParameters();
 
             String code = params.get("code");
-            checkIfEmpty(code, "Code");
+            try {
+                checkIfEmpty(code, "Code");
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn(ex.getMessage());
+                return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
+            }
 
             redirect_uri = params.get("redirect_uri");
-            checkIfEmpty(redirect_uri, "Redirect URI");
+            try {
+                checkIfEmpty(redirect_uri, "Redirect URI");
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn(ex.getMessage());
+                return new TokenErrorResponse(OAuth2Error.INVALID_REQUEST).toHTTPResponse();
+            }
 
             // ClientID - used as the username - may be located in the HTTP Header when Basic Authentication is used.
             // Check needed because parse() returns null for HTTP GET method
@@ -140,13 +174,22 @@ public class OIDCManager {
             } else {
                 client_id = params.get("client_id");
             }
-            checkIfEmpty(client_id, "Client ID");
-            Client client = OIDCCache.getCfgDB().getClientByID(client_id);
+            try {
+                checkIfEmpty(client_id, "Client ID");
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn(ex.getMessage());
+                return new TokenErrorResponse(OAuth2Error.INVALID_REQUEST).toHTTPResponse();
+            }
             // Check if code was issued to the specified client
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
-            if(!tCollection.getOptionalParameters().containsValue(client_id)) {
-                _log.warn("Code was not issued to the specified client");
-                throw new IllegalStateException("Code was not issued to the specified client");
+            try {
+                if (!tCollection.getOptionalParameters().containsValue(client_id)) {
+                    _log.warn("Code was not issued to the specified client");
+                    throw new IllegalStateException("Code was not issued to the specified client");
+                }
+            } catch (IllegalStateException ex) {
+                _log.warn(ex.getMessage());
+                return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
             }
             // client_id only needed for the above verification -> remove now
             tCollection.getOptionalParameters().remove("client_id");
@@ -165,13 +208,13 @@ public class OIDCManager {
             OIDCAccessTokenResponse response = 
                     new OIDCAccessTokenResponse(tCollection.getAccessToken(), tCollection.getRefreshToken(), jwsObject.serialize(), tCollection.getOptionalParameters());
             return response.toHTTPResponse();
-
-        } catch (JOSEException | ExecutionException | SerializeException | ParseException ex) {
-            _log.warn("Caught Exception in HTTPResponse.generateAuthenticationResponse(): ", ex);
-            return null;
         } catch (UncheckedExecutionException ex) {
             // OIDCache throws UncheckedExecutionException which contains an IllegalStateException
-            throw new IllegalStateException(ex.getMessage().substring(32));
+            _log.warn(ex.getMessage().substring(32));
+            return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
+        } catch (OIDCNotFoundInDatabaseException ex) {
+            _log.warn(ex.getMessage());
+            return new TokenErrorResponse(OAuth2Error.INVALID_CLIENT).toHTTPResponse();
         }
     }
 

@@ -5,10 +5,12 @@
  */
 package rub.nds.oidc.webapp;
 
+import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URISyntaxException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -44,20 +46,8 @@ public class HoKServlet extends HttpServlet {
             request.getSession().setAttribute("hok", true);
             HTTPResponse oidc_response = OIDCManager.generateCode(request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalArgumentException exception) {
+        } catch (URISyntaxException | SerializeException exception) {
             _log.warn("Caught Exception in HoKServlet.processRequest(): " + exception.getMessage(), exception);
-            response.setContentType("text/html;charset=UTF-8");
-            try (PrintWriter out = response.getWriter()) {
-                out.println("<!DOCTYPE html>");
-                out.println("<html>");
-                out.println("<head>");
-                out.println("<title>Authentication Error</title>");
-                out.println("</head>");
-                out.println("<body>");
-                out.println("<h1>" + exception.getMessage() + "</h1>");
-                out.println("</body>");
-                out.println("</html>");
-            }
         }
 
     }

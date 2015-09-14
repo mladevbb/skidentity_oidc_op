@@ -1,6 +1,8 @@
 package rub.nds.oidc.webapp;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import java.io.IOException;
@@ -39,20 +41,8 @@ public class TokenServlet extends HttpServlet {
         try {
             HTTPResponse oidc_response = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(request));
             ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalStateException exception) {
+        } catch (ParseException | ExecutionException | JOSEException | SerializeException exception) {
             _log.warn("Caught Exception in TokenServlet.processRequest(): " + exception.getMessage(), exception);
-            response.setContentType("text/html;charset=UTF-8");
-            try (PrintWriter out = response.getWriter()) {
-                out.println("<!DOCTYPE html>");
-                out.println("<html>");
-                out.println("<head>");
-                out.println("<title>Token Error </title>");
-                out.println("</head>");
-                out.println("<body>");
-                out.println("<h1>" + exception.getMessage() + "</h1>");
-                out.println("</body>");
-                out.println("</html>");
-            }
         }
     }
 
