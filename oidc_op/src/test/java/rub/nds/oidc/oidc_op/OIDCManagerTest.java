@@ -98,6 +98,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_scope", locationParameters.get("error"));
+        Assert.assertEquals("Parameter scope was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -114,6 +115,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_scope", locationParameters.get("error"));
+        Assert.assertEquals("Parameter scope was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -130,6 +132,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_scope", locationParameters.get("error"));
+        Assert.assertEquals("Scope does not contain 'openid'", locationParameters.get("error_description"));
     }
 
     /**
@@ -146,6 +149,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Parameter Redirect URI was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -162,6 +166,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Parameter Redirect URI was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -178,6 +183,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Parameter State was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -194,6 +200,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Parameter State was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -210,6 +217,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Parameter Client ID was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -226,6 +234,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Parameter Client ID was not found in request", locationParameters.get("error_description"));
     }
 
     /**
@@ -236,12 +245,14 @@ public class OIDCManagerTest {
      */
     @Test
     public void testGenerateCodeWrongClientID() throws Exception {
+        int clientID = 123;
         MockHttpServletRequest servletRequest
-                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&client_id=123");
+                = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&client_id=" + clientID);
 
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Client with ID: " + clientID + " was not found in the Database", locationParameters.get("error_description"));
     }
 
     /**
@@ -260,6 +271,7 @@ public class OIDCManagerTest {
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
+        Assert.assertEquals("Illegal argument found for attribute 'hok'", locationParameters.get("error_description"));
     }
 
     /**
