@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.LoggerFactory;
 import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
@@ -79,7 +81,7 @@ public class OIDCManager {
             // URI Constructor in AuthenticationErrorResponse() does not accept
             // empty strings. A placeholder is needed in case request
             // redirect_uri is empty
-            redirect_uri = "www.foo.bar";
+            redirect_uri = "http://bvb.de";
             checkIfEmpty(params.get("redirect_uri"), "Redirect URI");
             redirect_uri = params.get("redirect_uri");
 
@@ -217,7 +219,17 @@ public class OIDCManager {
             return new TokenErrorResponse(OAuth2Error.INVALID_CLIENT).toHTTPResponse();
         }
     }
-
+    
+    public static HTTPResponse accessProtectedResource(BearerAccessToken accessToken) throws ParseException {
+        try {
+            OIDCCache.getHandler().get(accessToken.getValue());
+        } catch (UncheckedExecutionException | ExecutionException ex) {
+            _log.warn(ex.getMessage());
+            return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
+        }
+        return new HTTPResponse(HTTPResponse.SC_OK);
+    }
+    
     /**
      * Generates a token collection
      *

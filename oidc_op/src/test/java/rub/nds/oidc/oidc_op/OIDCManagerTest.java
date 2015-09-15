@@ -11,6 +11,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import static com.nimbusds.oauth2.sdk.util.URLUtils.parseParameters;
 import com.nimbusds.openid.connect.sdk.OIDCAccessTokenResponse;
 import java.io.FileInputStream;
@@ -322,8 +323,9 @@ public class OIDCManagerTest {
     }
 
     /**
-     * Test OIDCManager.generateAuthenticationResponse() with a forged
-     * {@code code}. Try to get tokens forged a {@code code}
+     * Test OIDCManager.generateAuthenticationResponse() with a forged or expired
+     * {@code code}. Both scenarious are identical because the code is not found
+     * in the database
      *
      * @throws Exception
      */
@@ -487,6 +489,39 @@ public class OIDCManagerTest {
         Assert.assertEquals("invalid_request", locationParameters.get("error"));
     }
 
+    /**
+     * Test OIDCManager.accessProtectedResources() with valid access token. 
+     * At first an {@code access_token} is generated which is then used to 
+     * access a protected resource.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAccessProtectedResources() throws Exception {
+        codeResponse = generateCodeResponse();
+        Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
+        String code = locationQueryParameters.get("code");
+
+        MockHttpServletRequest servletRequest
+                = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + redirect_uriQuery + "&" + client_idQuery);
+        authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        
+        BearerAccessToken accessToken = OIDCAccessTokenResponse.parse(authenticationResponse).getBearerAccessToken();
+        HTTPResponse response = OIDCManager.accessProtectedResource(accessToken);
+        Assert.assertEquals(200, response.getStatusCode());
+    }
+
+    /**
+     * Test OIDCManager.accessProtectedResources() with an invalid access token.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAccessProtectedResourcesWithInvalidAccessToken() throws Exception {
+        HTTPResponse response = OIDCManager.accessProtectedResource(new BearerAccessToken("123"));
+        Assert.assertEquals(400, response.getStatusCode());
+    }
+    
     
     
     /**
