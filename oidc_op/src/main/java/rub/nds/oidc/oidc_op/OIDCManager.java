@@ -95,10 +95,7 @@ public class OIDCManager {
                 checkIfEmpty(state, "State");
                 stateInstance = new State(state);
             } catch (OIDCMissingArgumentException ex) {
-                _log.warn(ex.getMessage());
-                AuthenticationErrorResponse errorResponse
-                        = new AuthenticationErrorResponse(uriInstance, new ErrorObject("invalid_request", ex.getMessage(), 302), null, null);
-                return errorResponse.toHTTPResponse();
+                stateInstance = null;
             }
 
             client_id = params.get("client_id");
