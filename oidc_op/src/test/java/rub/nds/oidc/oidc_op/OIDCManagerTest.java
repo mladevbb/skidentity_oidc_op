@@ -586,7 +586,7 @@ public class OIDCManagerTest {
                     = generateMockServletRequest("GET", "/webapp/auth", scope + "&" + redirect_uriQuery + "&" + stateQuery + "&" + client_idQuery, Boolean.FALSE);
 
             codeResponse = OIDCManager.generateCode(servletRequest);
-        } catch (IllegalArgumentException | URISyntaxException | SerializeException | IOException ex) {
+        } catch (IllegalArgumentException | SerializeException | IOException ex) {
             _log.warn("Caught exception in OIDCManagerTest.generateHttpResponse(): " + ex.getMessage());
         }
         return codeResponse;
@@ -613,7 +613,7 @@ public class OIDCManagerTest {
             X509Certificate[] certificateChain = {certificate};
             servletRequest.setAttribute("javax.servlet.request.X509Certificate", certificateChain);
             codeResponse = OIDCManager.generateCode(servletRequest);
-        } catch (IllegalArgumentException | URISyntaxException | SerializeException | IOException ex) {
+        } catch (IllegalArgumentException | SerializeException | IOException ex) {
             _log.warn("Caught exception in OIDCManagerTest.generateHokHttpResponse(): " + ex.getMessage());
         }
         return codeResponse;

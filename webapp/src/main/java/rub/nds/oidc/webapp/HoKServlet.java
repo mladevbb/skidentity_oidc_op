@@ -43,7 +43,7 @@ public class HoKServlet extends HttpServlet {
             request.getSession().setAttribute("hok", true);
             HTTPResponse oidc_response = OIDCManager.generateCode(request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (URISyntaxException | SerializeException exception) {
+        } catch (SerializeException exception) {
             _log.warn("Caught Exception in HoKServlet.processRequest(): " + exception.getMessage(), exception);
         }
 

@@ -41,7 +41,7 @@ public class AuthenticationSerlvet extends HttpServlet {
             request.getSession().setAttribute("hok", false);
             HTTPResponse oidc_response = OIDCManager.generateCode(request);
             ServletUtils.applyHTTPResponse(oidc_response, response);
-        } catch (URISyntaxException | SerializeException exception) {
+        } catch (SerializeException exception) {
             _log.warn("Caught Exception in AuthenticationServlet.processRequest(): " + exception.getMessage(), exception);
         }
     }

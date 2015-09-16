@@ -61,6 +61,7 @@ public class OIDCManager {
     private static String redirect_uri;
     private static String state;
     private static State stateInstance = null;
+    private static URI uriInstance;
 
     /**
      * Generates an HTTP response containing an OAuth 2.0 code using the
@@ -68,22 +69,26 @@ public class OIDCManager {
      *
      * @param servletRequest the request of the servlet
      * @return A HTTPResponse containing an OAuth 2.0 code
-     * @throws java.net.URISyntaxException
      * @throws com.nimbusds.oauth2.sdk.SerializeException
      * @throws java.io.IOException
      */
     public static HTTPResponse generateCode(HttpServletRequest servletRequest)
-            throws URISyntaxException, SerializeException, IOException {
+            throws SerializeException, IOException {
         try {
             HTTPRequest request = ServletUtils.createHTTPRequest(servletRequest);
             Map<String, String> params = request.getQueryParameters();
-
-            // URI Constructor in AuthenticationErrorResponse() does not accept
-            // empty strings. A placeholder is needed in case request
-            // redirect_uri is empty
-            redirect_uri = "http://bvb.de";
-            checkIfEmpty(params.get("redirect_uri"), "Redirect URI");
+            
+            try {
+                checkIfEmpty(params.get("redirect_uri"), "Redirect URI");
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
+                // the redirect_uri in the request is empty. A placeholder is needed
+                AuthenticationErrorResponse errorResponse
+                        = new AuthenticationErrorResponse(new URI("http://bvb.de"), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
+                return errorResponse.toHTTPResponse();
+            }
             redirect_uri = params.get("redirect_uri");
+            uriInstance = new URI(redirect_uri);
 
             state = params.get("state");
             try {
@@ -92,7 +97,7 @@ public class OIDCManager {
             } catch (OIDCMissingArgumentException ex) {
                 _log.warn(ex.getMessage());
                 AuthenticationErrorResponse errorResponse
-                        = new AuthenticationErrorResponse(new URI(redirect_uri), new ErrorObject("invalid_request", ex.getMessage(), 302), null, null);
+                        = new AuthenticationErrorResponse(uriInstance, new ErrorObject("invalid_request", ex.getMessage(), 302), null, null);
                 return errorResponse.toHTTPResponse();
             }
 
@@ -116,7 +121,7 @@ public class OIDCManager {
             } catch (OIDCMissingArgumentException | IllegalArgumentException ex) {
                 _log.warn(ex.getMessage());
                 AuthenticationErrorResponse errorResponse
-                        = new AuthenticationErrorResponse(new URI(redirect_uri), new ErrorObject("invalid_scope", ex.getMessage(), 302), stateInstance, null);
+                        = new AuthenticationErrorResponse(uriInstance, new ErrorObject("invalid_scope", ex.getMessage(), 302), stateInstance, null);
                 return errorResponse.toHTTPResponse();
             }
 
@@ -126,13 +131,24 @@ public class OIDCManager {
             OIDCCache.getHandler().put(code.getValue(), collection);
 
             AuthenticationSuccessResponse successResponse
-                    = new AuthenticationSuccessResponse(new URI(redirect_uri), code, null, null, stateInstance, stateInstance, ResponseMode.QUERY);
+                    = new AuthenticationSuccessResponse(uriInstance, code, null, null, stateInstance, stateInstance, ResponseMode.QUERY);
             return successResponse.toHTTPResponse();
         } catch (OIDCMissingArgumentException | OIDCNotFoundInDatabaseException | IllegalArgumentException ex) {
             _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
             AuthenticationErrorResponse errorResponse
-                    = new AuthenticationErrorResponse(new URI(redirect_uri), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
+                    = new AuthenticationErrorResponse(uriInstance, new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
             return errorResponse.toHTTPResponse();
+        } catch (URISyntaxException ex) {
+            _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
+            // the redirect_uri in the request is not a valid URI. We need a placeholder
+            try {
+                AuthenticationErrorResponse errorResponse = 
+                        new AuthenticationErrorResponse(new URI("http://bvb.de"), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
+                return errorResponse.toHTTPResponse();
+            } catch (URISyntaxException ex1) {
+                _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
+            }
+            return null;
         }
     }
 
