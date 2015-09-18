@@ -80,9 +80,8 @@ public class OIDCManager {
                 checkIfEmpty(params.get("redirect_uri"), "Redirect URI");
             } catch (OIDCMissingArgumentException ex) {
                 _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
-                // the redirect_uri in the request is empty. A placeholder is needed
                 AuthenticationErrorResponse errorResponse
-                        = new AuthenticationErrorResponse(new URI("http://bvb.de"), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
+                        = new AuthenticationErrorResponse(new URI(servletRequest.getRequestURI()), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
                 return errorResponse.toHTTPResponse();
             }
             redirect_uri = params.get("redirect_uri");

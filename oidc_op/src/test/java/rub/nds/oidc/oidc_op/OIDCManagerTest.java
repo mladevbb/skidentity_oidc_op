@@ -82,6 +82,8 @@ public class OIDCManagerTest {
     @Test
     public void testGenerateCodeAllParameters() throws Exception {
         codeResponse = generateCodeResponse();
+        Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
+        Assert.assertFalse(locationParameters.get("code").isEmpty());
     }
 
     /**
@@ -182,8 +184,7 @@ public class OIDCManagerTest {
 
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
-        Assert.assertEquals("invalid_request", locationParameters.get("error"));
-        Assert.assertEquals("Parameter State was not found in request", locationParameters.get("error_description"));
+        Assert.assertFalse(locationParameters.get("code").isEmpty());
     }
 
     /**
@@ -199,8 +200,7 @@ public class OIDCManagerTest {
 
         codeResponse = OIDCManager.generateCode(servletRequest);
         Map <String, String> locationParameters = getLocationQueryParameters(codeResponse);
-        Assert.assertEquals("invalid_request", locationParameters.get("error"));
-        Assert.assertEquals("Parameter State was not found in request", locationParameters.get("error_description"));
+        Assert.assertFalse(locationParameters.get("code").isEmpty());
     }
 
     /**
