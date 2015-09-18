@@ -137,7 +137,7 @@ public class OIDCManager {
             // the redirect_uri in the request is not a valid URI. A placeholder is needed
             try {
                 AuthenticationErrorResponse errorResponse = 
-                        new AuthenticationErrorResponse(new URI("http://bvb.de"), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
+                        new AuthenticationErrorResponse(new URI(servletRequest.getRequestURI()), new ErrorObject("invalid_request", ex.getMessage(), 302), stateInstance, null);
                 return errorResponse.toHTTPResponse();
             } catch (URISyntaxException ex1) {
                 _log.warn("Caught exception in HTTPResponse.generateCode(): ", ex);
