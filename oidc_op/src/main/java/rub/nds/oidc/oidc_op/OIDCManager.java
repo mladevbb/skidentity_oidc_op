@@ -195,7 +195,7 @@ public class OIDCManager {
             // Check if code was issued to the specified client
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
             try {
-                if (!tCollection.getOptionalParameters().containsValue(client_id)) {
+                if (!tCollection.getIdToken().getAudience().contains(new Audience(client_id))) {
                     _log.warn("Code was not issued to the specified client");
                     throw new IllegalStateException("Code was not issued to the specified client");
                 }
@@ -203,8 +203,6 @@ public class OIDCManager {
                 _log.warn(ex.getMessage());
                 return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
             }
-            // client_id only needed for the above verification -> remove now
-            tCollection.getOptionalParameters().remove("client_id");
             
             // Invalidate the code and replace it with the corresponding access token
             OIDCCache.getHandler().invalidate(code);
@@ -260,8 +258,6 @@ public class OIDCManager {
         Map<String,Object> optionalParameters = new HashMap();
         //Expiration time of the Access Token in seconds since the response was generated. 
         optionalParameters.put("expires_in", 1800);
-        //Used to check if th ecode was issued to the specified client
-        optionalParameters.put("client_id", clientId);
         
         return new TokenCollection(token, rToken, claimSet, optionalParameters);
     }
