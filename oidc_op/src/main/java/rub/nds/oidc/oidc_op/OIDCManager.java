@@ -40,8 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.LoggerFactory;
 import rub.nds.oidc.exceptions.OIDCNotFoundInDatabaseException;
@@ -261,7 +259,9 @@ public class OIDCManager {
         RefreshToken rToken = new RefreshToken();
         IDTokenClaimsSet claimSet = generateIDToken(servletRequest);
         Map<String,Object> optionalParameters = new HashMap();
+        //Expiration time of the Access Token in seconds since the response was generated. 
         optionalParameters.put("expires_in", 1800);
+        //Used to check if th ecode was issued to the specified client
         optionalParameters.put("client_id", clientId);
         
         return new TokenCollection(token, rToken, claimSet, optionalParameters);
