@@ -121,7 +121,7 @@ public class OIDCManager {
 
             // Generate a code as well as the tokens and put them in the cache
             AuthorizationCode code = new AuthorizationCode();
-            TokenCollection collection = generateTokenCollection(servletRequest, client_id);
+            TokenCollection collection = generateTokenCollection(servletRequest);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
             AuthenticationSuccessResponse successResponse
@@ -250,7 +250,7 @@ public class OIDCManager {
      * @throws IllegalArgumentException If the parameter 'hok' in the
      * {@code servletRequest} does not contain a boolean
      */
-    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest, String clientId)
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest)
             throws OIDCMissingArgumentException, IllegalArgumentException {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
