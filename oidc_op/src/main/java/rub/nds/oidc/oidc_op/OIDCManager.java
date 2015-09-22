@@ -165,24 +165,9 @@ public class OIDCManager {
         try {
             Map<String, String> params = request.getQueryParameters();
 
-            String code = params.get("code");
-            try {
-                checkIfEmpty(code, "Code");
-            } catch (OIDCMissingArgumentException ex) {
-                _log.warn(ex.getMessage());
-                return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
-            }
-
-            redirect_uri = params.get("redirect_uri");
-            try {
-                checkIfEmpty(redirect_uri, "Redirect URI");
-            } catch (OIDCMissingArgumentException ex) {
-                _log.warn(ex.getMessage());
-                return new TokenErrorResponse(OAuth2Error.INVALID_REQUEST).toHTTPResponse();
-            }
-
             // ClientID - used as the username - may be located in the HTTP Header when Basic Authentication is used.
             // Check needed because parse() returns null for HTTP GET method
+            client_id = "";
             if (request.getMethod() == HTTPRequest.Method.POST || request.getMethod() == HTTPRequest.Method.PUT) {
                 client_id = ClientAuthentication.parse(request).getClientID().toString();
             } else {
@@ -193,6 +178,14 @@ public class OIDCManager {
             } catch (OIDCMissingArgumentException ex) {
                 _log.warn(ex.getMessage());
                 return new TokenErrorResponse(OAuth2Error.INVALID_REQUEST).toHTTPResponse();
+            }
+
+            String code = params.get("code");
+            try {
+                checkIfEmpty(code, "Code");
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn(ex.getMessage());
+                return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
             }
             // Check if code was issued to the specified client
             TokenCollection tCollection = OIDCCache.getHandler().get(code);
@@ -205,7 +198,14 @@ public class OIDCManager {
                 _log.warn(ex.getMessage());
                 return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
             }
-            
+
+            redirect_uri = params.get("redirect_uri");
+            try {
+                checkIfEmpty(redirect_uri, "Redirect URI");
+            } catch (OIDCMissingArgumentException ex) {
+                _log.warn(ex.getMessage());
+                return new TokenErrorResponse(OAuth2Error.INVALID_REQUEST).toHTTPResponse();
+            }
             // Check if redirect_uri in token request and the one in the code request are the same
             if (!redirect_uri.equals(tCollection.getOptionalParameters().get("redirect_uri"))) {
                 _log.warn("redirect_uri parameter value is not identical to the redirect_uri parameter "
