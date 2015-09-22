@@ -78,8 +78,8 @@
     <!-- Define a SSL Coyote HTTP/1.1 Connector with required client authentication on port 8443 
          Insert your paths for idp.jks and root.jks 
          trustore not needed because all certificates are trustful
-           truststoreFile="/home/philipp/universitaet/6.Semester/bachelorarbeit/code/skidentity_oidc_op/certificates/root/root.jks"
-           truststorePass="changeit"-->
+           truststoreFile=""
+           truststorePass=""-->
     <Connector
            protocol="org.apache.coyote.http11.Http11NioProtocol"
            port="8443" maxThreads="200"
