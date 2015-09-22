@@ -17,7 +17,6 @@ import com.nimbusds.openid.connect.sdk.OIDCAccessTokenResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Map;
@@ -381,6 +380,25 @@ public class OIDCManagerTest {
         String code = locationQueryParameters.get("code");
         MockHttpServletRequest servletRequest
                 = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + client_idQuery);
+        authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
+        Assert.assertTrue(authenticationResponse.getContent().contains("invalid_request"));
+    }
+    
+    /**
+     * Test OIDCManager.generateAuthenticationResponse() with wrong
+     * {@code redirect_uri}. Use a different {@code redirect_uri} for the 
+     * token request
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGenerateAuthenticationResponseWithDifferentRedirectUri() throws Exception {
+        codeResponse = generateCodeResponse();
+        Map<String, String> locationQueryParameters = getLocationQueryParameters(codeResponse);
+        String code = locationQueryParameters.get("code");
+        MockHttpServletRequest servletRequest
+                = generateMockServletRequest("GET", "/webapp/token", "code=" + code + "&" + client_idQuery 
+                        + "&redirect_uri=http://cloud.nds.rub.de:8067");
         authenticationResponse = OIDCManager.generateAuthenticationResponse(ServletUtils.createHTTPRequest(servletRequest));
         Assert.assertTrue(authenticationResponse.getContent().contains("invalid_request"));
     }

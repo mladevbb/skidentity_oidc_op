@@ -99,6 +99,7 @@ public class OIDCManager {
             checkIfEmpty(client_id, "Client ID");
             Client client = OIDCCache.getCfgDB().getClientByID(client_id);
 
+            // check can not be done until client is validated
             if (!client.getRedirect_uris().contains(redirect_uri)) {
                 _log.warn("Redirect URI was not found in database");
                 //throw new OIDCNotFoundInDatabaseException("Redirect URI was not found in database");
@@ -121,7 +122,8 @@ public class OIDCManager {
 
             // Generate a code as well as the tokens and put them in the cache
             AuthorizationCode code = new AuthorizationCode();
-            TokenCollection collection = generateTokenCollection(servletRequest);
+            // redirect_uri is needed to validate the token request
+            TokenCollection collection = generateTokenCollection(servletRequest, redirect_uri);
             OIDCCache.getHandler().put(code.getValue(), collection);
 
             AuthenticationSuccessResponse successResponse
@@ -204,6 +206,15 @@ public class OIDCManager {
                 return new TokenErrorResponse(OAuth2Error.INVALID_GRANT).toHTTPResponse();
             }
             
+            // Check if redirect_uri in token request and the one in the code request are the same
+            if (!redirect_uri.equals(tCollection.getOptionalParameters().get("redirect_uri"))) {
+                _log.warn("redirect_uri parameter value is not identical to the redirect_uri parameter "
+                        + "value that was included in the initial Authorization Request");
+                return new TokenErrorResponse(OAuth2Error.INVALID_REQUEST).toHTTPResponse();
+            }
+            // optional Parameter is only needed for this check -> delete afterwards
+            tCollection.getOptionalParameters().remove("redirect_uri");
+            
             // Invalidate the code and replace it with the corresponding access token
             OIDCCache.getHandler().invalidate(code);
             OIDCCache.getHandler().put(tCollection.getAccessToken().getValue(), tCollection);
@@ -250,7 +261,7 @@ public class OIDCManager {
      * @throws IllegalArgumentException If the parameter 'hok' in the
      * {@code servletRequest} does not contain a boolean
      */
-    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest)
+    private static TokenCollection generateTokenCollection(HttpServletRequest servletRequest, String redirectURI)
             throws OIDCMissingArgumentException, IllegalArgumentException {
         AccessToken token = new BearerAccessToken();
         RefreshToken rToken = new RefreshToken();
@@ -258,6 +269,7 @@ public class OIDCManager {
         Map<String,Object> optionalParameters = new HashMap();
         //Expiration time of the Access Token in seconds since the response was generated. 
         optionalParameters.put("expires_in", 1800);
+        optionalParameters.put("redirect_uri", redirectURI);
         
         return new TokenCollection(token, rToken, claimSet, optionalParameters);
     }
